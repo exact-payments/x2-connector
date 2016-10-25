@@ -3,26 +3,28 @@ import { EventEmitter } from 'events';
 
 
 class HTTP extends EventEmitter {
+  constructor() {
+    super();
+    this._middlewares = [];
+    this._timeout     = 10000;
+  }
 
   init(opts = {}) {
     if (!opts.baseURL) { throw new Error('Unable to init http service, missing baseURL attribute'); }
-    opts.timeout     || (opts.timeout = 10000);
-    opts.middlewares || (opts.middlewares = []);
-
-    this._middlewares = opts.middlewares;
-    delete opts.middlewares;
-
+    if (opts.timeout) { this._timeout = opts.timeout; }
+    if (opts.middlewares) {
+      this._middlewares = opts.middlewares;
+      delete opts.middlewares;
+    }
     this._axios = axios.create(opts);
   }
 
-  async get(path, params, auth = true) {
-    this._isInitializedControl();
+  async get(path, params, config = {}, auth = true) {
+    if (!this._axios) { throw new Error('Library has not being initialized'); }
 
-    const config = this._runMiddlewares(this, auth);
     config.params = params;
-
     try {
-      return await this._axios.get(path, config);
+      return await this._axios.get(path, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
       this.emit('http-error', message);
@@ -30,10 +32,10 @@ class HTTP extends EventEmitter {
     }
   }
 
-  async post(path, data, auth = true) {
-    this._isInitializedControl();
+  async post(path, data, config = {}, auth = true) {
+    if (!this._axios) { throw new Error('Library has not being initialized'); }
     try {
-      return this._axios.post(path, data, this._runMiddlewares(this, auth));
+      return await this._axios.post(path, data, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
       this.emit('http-error', message);
@@ -41,10 +43,10 @@ class HTTP extends EventEmitter {
     }
   }
 
-  async put(path, data, auth = true) {
-    this._isInitializedControl();
+  async put(path, data, config = {}, auth = true) {
+    if (!this._axios) { throw new Error('Library has not being initialized'); }
     try {
-      return this._axios.put(path, data, this._runMiddlewares(this, auth));
+      return await this._axios.put(path, data, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
       this.emit('http-error', message);
@@ -52,10 +54,10 @@ class HTTP extends EventEmitter {
     }
   }
 
-  async del(path, auth = true) {
-    this._isInitializedControl();
+  async del(path, config = {}, auth = true) {
+    if (!this._axios) { throw new Error('Library has not being initialized'); }
     try {
-      return this._axios.delete(path, this._runMiddlewares(this, auth));
+      return await this._axios.delete(path, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
       this.emit('http-error', message);
@@ -65,6 +67,7 @@ class HTTP extends EventEmitter {
 
   static errorHandler(response) {
     if (response instanceof Error) { return `Unknown Error: ${response}`; }
+    if (!response.status) { return 'Unknown Error'; }
 
     switch (response.status) {
       case 400:
@@ -80,24 +83,18 @@ class HTTP extends EventEmitter {
         return 'Requested Resource Not Found';
       case 429:
         return 'Rate Limited';
-      case 500: break;
-      case 502: break;
+      case 500:
+      case 502:
       case 503:
         return `API Server Error ${response.status}`;
       default:
         return `API Request Error ${response.status}`;
     }
-    return 'Unknown Error';
   }
 
-  _runMiddlewares(conf, auth) {
-    this._middlewares.forEach(middleware => middleware(conf, auth));
-    return conf;
-  }
-
-  _isInitializedControl() {
-    if (this._axios) { return; }
-    throw new Error('Library has not being initialized');
+  _runMiddlewares(config, auth) {
+    this._middlewares.forEach(middleware => middleware());
+    return config;
   }
 }
 
