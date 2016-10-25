@@ -5,7 +5,6 @@ import http   from '../../src';
 
 describe('HTTP -> http', () => {
 
-
   it('extends from EventEmitter class so it should have the "emit" and "on" methods available', () => {
     assert.ok(http.emit);
     assert.ok(http.on);
@@ -64,12 +63,8 @@ describe('HTTP -> http', () => {
       const resolved = new Promise(r => r({ data: {} }));
       sinon.stub(http._axios, 'get').returns(resolved);
 
-      try {
-        await http.get('/foo');
-        sinon.assert.calledOnce(http._axios.get);
-      } catch (err) {
-        return err;
-      }
+      await http.get('/foo');
+      sinon.assert.calledOnce(http._axios.get);
     });
   });
 
@@ -78,12 +73,8 @@ describe('HTTP -> http', () => {
       const resolved = new Promise(r => r({ data: {} }));
       sinon.stub(http._axios, 'post').returns(resolved);
 
-      try {
-        await http.post('/foo');
-        sinon.assert.calledOnce(http._axios.post);
-      } catch (err) {
-        return err;
-      }
+      await http.post('/foo');
+      sinon.assert.calledOnce(http._axios.post);
     });
   });
 
@@ -92,12 +83,8 @@ describe('HTTP -> http', () => {
       const resolved = new Promise(r => r({ data: {} }));
       sinon.stub(http._axios, 'put').returns(resolved);
 
-      try {
-        await http.put('/foo');
-        sinon.assert.calledOnce(http._axios.put);
-      } catch (err) {
-        return err;
-      }
+      await http.put('/foo');
+      sinon.assert.calledOnce(http._axios.put);
     });
   });
 
@@ -106,12 +93,42 @@ describe('HTTP -> http', () => {
       const resolved = new Promise(r => r({ data: {} }));
       sinon.stub(http._axios, 'delete').returns(resolved);
 
-      try {
-        await http.del('/foo');
-        sinon.assert.calledOnce(http._axios.delete);
-      } catch (err) {
-        return err;
-      }
+      await http.del('/foo');
+      sinon.assert.calledOnce(http._axios.delete);
+    });
+  });
+
+  describe('errorHandler', () => {
+    it('returns the error, when response is an instance of error', () => {
+      const err = new Error('foo');
+      assert.equal(http.HTTP.errorHandler(err), `Unknown Error: ${err}`);
+    });
+
+    it('returns "Unknown Error" when response is not an instance of error and does not have a status', () => {
+      assert.equal(http.HTTP.errorHandler('foo'), 'Unknown Error');
+    });
+
+    it('returns API Server Error when response status is within 500', () => {
+      [500, 502, 503].forEach((status) => {
+        assert.equal(http.HTTP.errorHandler({ status }), `API Server Error ${status}`);
+      });
+    });
+
+    it('returns API Request Error when response status is not defined in errorHandler', () => {
+      const status = 1000;
+      assert.equal(http.HTTP.errorHandler({ status }), `API Request Error ${status}`);
+    });
+
+    it('returns 400x related response when status is within 400', () => {
+      assert.equal(http.HTTP.errorHandler({
+        status: 400,
+        data  : 'foo'
+      }), 'foo');
+
+      assert.equal(http.HTTP.errorHandler({ status: 402 }), 'Error 402: You must upgrade your account to do that');
+      assert.equal(http.HTTP.errorHandler({ status: 403 }), 'Error 403: You are not authorized to access that');
+      assert.equal(http.HTTP.errorHandler({ status: 404 }), 'Requested Resource Not Found');
+      assert.equal(http.HTTP.errorHandler({ status: 429 }), 'Rate Limited');
     });
   });
 });
