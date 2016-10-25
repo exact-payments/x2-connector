@@ -93,7 +93,7 @@ class HTTP extends EventEmitter {
   }
 
   _runMiddlewares(config, auth) {
-    this._middlewares.forEach(middleware => middleware());
+    this._middlewares.forEach(middleware => middleware(config, auth));
     return config;
   }
 }
