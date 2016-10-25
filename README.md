@@ -2,7 +2,6 @@
 
 :orange_book: X2 Service HTTP for Client Side Applications
 
-
 ```bash
 # dev mode
 $ npm run dev
