@@ -4,7 +4,7 @@ const webpack = require('webpack');
 
 const projectRoot    = path.resolve(__dirname, '/');
 const UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
-const libraryName    = 'x2-http';
+const libraryName    = 'http-client';
 
 const plugins = [];
 let outputFile;

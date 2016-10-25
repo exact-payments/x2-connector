@@ -5,13 +5,18 @@ import { EventEmitter } from 'events';
 class HTTP extends EventEmitter {
   constructor() {
     super();
-    this._middlewares = [];
-    this._timeout     = 10000;
+    this._middlewares  = [];
+    this._timeout      = 10000;
+    this.prefixEmitter = '';
   }
 
   init(opts = {}) {
     if (!opts.baseURL) { throw new Error('Unable to init http service, missing baseURL attribute'); }
     if (opts.timeout) { this._timeout = opts.timeout; }
+    if (opts.prefixEmitter) {
+      this._prefixEmitter = opts.prefixEmitter;
+      delete opts.prefixEmitter;
+    }
     if (opts.middlewares) {
       this._middlewares = opts.middlewares;
       delete opts.middlewares;
@@ -27,7 +32,7 @@ class HTTP extends EventEmitter {
       return await this._axios.get(path, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
-      this.emit('http-error', message);
+      this.emit(`${this._prefixEmitter}-http-error`, message);
       throw (message);
     }
   }
@@ -38,7 +43,7 @@ class HTTP extends EventEmitter {
       return await this._axios.post(path, data, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
-      this.emit('http-error', message);
+      this.emit(`${this._prefixEmitter}-http-error`, message);
       throw (message);
     }
   }
@@ -49,7 +54,7 @@ class HTTP extends EventEmitter {
       return await this._axios.put(path, data, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
-      this.emit('http-error', message);
+      this.emit(`${this._prefixEmitter}-http-error`, message);
       throw (message);
     }
   }
@@ -60,7 +65,7 @@ class HTTP extends EventEmitter {
       return await this._axios.delete(path, this._runMiddlewares(config, auth));
     } catch (err) {
       const message = this.constructor.errorHandler(err);
-      this.emit('http-error', message);
+      this.emit(`${this._prefixEmitter}-http-error`, message);
       throw (message);
     }
   }
