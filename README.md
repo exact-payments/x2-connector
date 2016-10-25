@@ -1,8 +1,13 @@
-# x2-service-http
+# x2-http
 
-:orange_book: X2 Service HTTP for Client Side Applications
+> 
+
+### Development Setup
 
 ```bash
+# install dependencies
+$ npm install
+
 # dev mode
 $ npm run dev
 
