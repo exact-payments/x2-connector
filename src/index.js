@@ -1,0 +1,106 @@
+import axios            from 'axios';
+import { EventEmitter } from 'events';
+
+
+class HTTP extends EventEmitter {
+
+  init(opts = {}) {
+    if (!opts.baseURL) { throw new Error('Unable to init http service, missing baseURL attribute'); }
+    opts.timeout     || (opts.timeout = 10000);
+    opts.middlewares || (opts.middlewares = []);
+
+    this._middlewares = opts.middlewares;
+    delete opts.middlewares;
+
+    this._axios = axios.create(opts);
+  }
+
+  async get(path, params, auth = true) {
+    this._isInitializedControl();
+
+    const config = this._runMiddlewares(this, auth);
+    config.params = params;
+
+    try {
+      return await this._axios.get(path, config);
+    } catch (err) {
+      const message = this.constructor.errorHandler(err);
+      this.emit('http-error', message);
+      throw (message);
+    }
+  }
+
+  async post(path, data, auth = true) {
+    this._isInitializedControl();
+    try {
+      return this._axios.post(path, data, this._runMiddlewares(this, auth));
+    } catch (err) {
+      const message = this.constructor.errorHandler(err);
+      this.emit('http-error', message);
+      throw (message);
+    }
+  }
+
+  async put(path, data, auth = true) {
+    this._isInitializedControl();
+    try {
+      return this._axios.put(path, data, this._runMiddlewares(this, auth));
+    } catch (err) {
+      const message = this.constructor.errorHandler(err);
+      this.emit('http-error', message);
+      throw (message);
+    }
+  }
+
+  async del(path, auth = true) {
+    this._isInitializedControl();
+    try {
+      return this._axios.delete(path, this._runMiddlewares(this, auth));
+    } catch (err) {
+      const message = this.constructor.errorHandler(err);
+      this.emit('http-error', message);
+      throw (message);
+    }
+  }
+
+  static errorHandler(response) {
+    if (response instanceof Error) { return `Unknown Error: ${response}`; }
+
+    switch (response.status) {
+      case 400:
+        return response.data || response;
+      case 401:
+        if (response.data && response.data.length > 0) { return response.data[0].message; }
+        break;
+      case 402:
+        return 'Error 402: You must upgrade your account to do that';
+      case 403:
+        return 'Error 403: You are not authorized to access that';
+      case 404:
+        return 'Requested Resource Not Found';
+      case 429:
+        return 'Rate Limited';
+      case 500: break;
+      case 502: break;
+      case 503:
+        return `API Server Error ${response.status}`;
+      default:
+        return `API Request Error ${response.status}`;
+    }
+    return 'Unknown Error';
+  }
+
+  _runMiddlewares(conf, auth) {
+    this._middlewares.forEach(middleware => middleware(conf, auth));
+    return conf;
+  }
+
+  _isInitializedControl() {
+    if (this._axios) { return; }
+    throw new Error('Library has not being initialized');
+  }
+}
+
+const http = new HTTP();
+http.HTTP = HTTP;
+export default http;

@@ -1,9 +1,10 @@
-const webpack        = require('webpack');
-const UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
-const path           = require('path');
-const env            = require('yargs').argv.mode;
+const path    = require('path');
+const env     = require('yargs').argv.mode;
+const webpack = require('webpack');
 
-const libraryName = 'x2-service-storage';
+const projectRoot    = path.resolve(__dirname, '/');
+const UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
+const libraryName    = 'x2-http';
 
 const plugins = [];
 let outputFile;
@@ -16,31 +17,31 @@ if (env === 'build') {
 }
 
 const config = {
-  entry: `${__dirname}/src/index.js`,
+  entry: ['babel-polyfill', `${__dirname}/src/index.js`],
   devtool: 'source-map',
   output: {
-    path: `${__dirname}/lib`,
-    filename: outputFile,
-    library: libraryName,
-    libraryTarget: 'umd',
+    path          : `${__dirname}/dist`,
+    filename      : outputFile,
+    library       : libraryName,
+    libraryTarget : 'umd',
     umdNamedDefine: true
   },
   module: {
-    loaders: [
-      {
-        test: /(\.jsx|\.js)$/,
-        loader: 'babel',
-        exclude: /(node_modules|bower_components)/
-      },
-      {
-        test: /(\.jsx|\.js)$/,
-        loader: 'eslint-loader',
-        exclude: /node_modules/
-      }
-    ]
+    preLoaders: [{
+      test   : /(\.jsx|\.js)$/,
+      loader : 'eslint',
+      include: projectRoot,
+      exclude: /(node_modules|bower_components)/
+    }],
+    loaders: [{
+      test   : /(\.jsx|\.js)$/,
+      loader : 'babel',
+      include: projectRoot,
+      exclude: /(node_modules|bower_components)/
+    }]
   },
   resolve: {
-    root: path.resolve('./src'),
+    root      : path.resolve('./src'),
     extensions: ['', '.js']
   },
   plugins
