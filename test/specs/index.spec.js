@@ -11,34 +11,36 @@ describe('HTTP -> http', () => {
     assert.ok(http.on);
   });
 
-  it('throws an error when lib has not being initialized', () => {
-    assert.throws(
-      () => {
-        http.get('foo');
-      },
-      /Library has not being initialized/
-    );
+  it('GET request creates an error when lib has not being initialized', async () => {
+    try {
+      await http.get('foo');
+    } catch (err) {
+      assert.equal(err.message, 'Library has not being initialized');
+    }
+  });
 
-    assert.throws(
-      () => {
-        http.post('foo');
-      },
-      /Library has not being initialized/
-    );
+  it('POST request creates an error when lib has not being initialized', async () => {
+    try {
+      await http.post('foo', { foo: 'bar' });
+    } catch (err) {
+      assert.equal(err.message, 'Library has not being initialized');
+    }
+  });
 
-    assert.throws(
-      () => {
-        http.del('foo');
-      },
-      /Library has not being initialized/
-    );
+  it('PUT request creates an error when lib has not being initialized', async () => {
+    try {
+      await http.put('foo');
+    } catch (err) {
+      assert.equal(err.message, 'Library has not being initialized');
+    }
+  });
 
-    assert.throws(
-      () => {
-        http.put('foo');
-      },
-      /Library has not being initialized/
-    );
+  it('DEL request creates an error when lib has not being initialized', async () => {
+    try {
+      await http.del('foo');
+    } catch (err) {
+      assert.equal(err.message, 'Library has not being initialized');
+    }
   });
 
   describe('init', () => {
@@ -112,5 +114,4 @@ describe('HTTP -> http', () => {
       }
     });
   });
-
 });
