@@ -131,4 +131,16 @@ describe('HTTP -> http', () => {
       assert.equal(http.HTTP.errorHandler({ status: 429 }), 'Rate Limited');
     });
   });
+
+  describe('_runMiddlewares', () => {
+    it('runs a provided middleware', () => {
+      const config     = { headers: { foo: 'foo' } };
+      const newConfig  = { headers: { foo: 'bar' } };
+      const middleware = (config) => { config.headers.foo = 'bar'; };
+
+      http._middlewares.push(middleware);
+
+      assert.deepEqual(http._runMiddlewares(config), newConfig);
+    });
+  });
 });
