@@ -1,6 +1,5 @@
-# x2-http
+# http-client
 
-> 
 
 ### Development Setup
 
