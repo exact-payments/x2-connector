@@ -1,20 +1,29 @@
 import 'whatwg-fetch';
 import { EventEmitter } from 'events';
+import Storage          from '@fintechdev/x2-service-storage';
+import setTimeout       from 'relign/set-timeout';
+import setInterval      from 'relign/set-interval';
+
 
 class HTTP extends EventEmitter {
   constructor() {
     super();
 
+    this.isAuthenticated = false;
+    this.token           = null;
+    this.tokenExpiriesAt = null;
+
     this._baseUrl     = '';
     this._middlewares = [];
-  }
 
-  static _fetchOptions(opts = {}) {
-    return {
-      method : opts.method || 'GET',
-      body   : opts.data ? JSON.stringify(opts.data) : undefined,
-      headers: { 'Content-Type': 'application/json' }
-    };
+    this._storage                 = new Storage();
+    this._inactivityCheckInterval = null;
+    this._tokenRenewTimeout       = null;
+    this._inactivityTimeout       = null;
+    this._pageActivityDetected    = false;
+    this._watchForPageActivity    = false;
+
+    this._restoreExistingSession();
   }
 
   init(opts = {}) {
@@ -30,7 +39,7 @@ class HTTP extends EventEmitter {
       const res  = await fetch(url, config);
       const body = await res.json();
 
-      return this.constructor.responseHandler(res, body);
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
       this.emit('http-client:error', err);
       throw err;
@@ -45,7 +54,7 @@ class HTTP extends EventEmitter {
       const res  = await fetch(url, config);
       const body = await res.json();
 
-      return this.constructor.responseHandler(res, body);
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
       this.emit('http-client:error', err);
       throw err;
@@ -60,7 +69,7 @@ class HTTP extends EventEmitter {
       const res  = await fetch(url, config);
       const body = await res.json();
 
-      return this.constructor.responseHandler(res, body);
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
       this.emit('http-client:error', err);
       throw err;
@@ -75,14 +84,105 @@ class HTTP extends EventEmitter {
       const res  = await fetch(url, config);
       const body = await res.json();
 
-      return this.constructor.responseHandler(res, body);
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
       this.emit('http-client:error', err);
       throw err;
     }
   }
 
-  static responseHandler(res, body) {
+  async login(email, password) {
+    const res = await this.post('/token', { email, password });
+
+    this.isAuthenticated = true;
+    this.token           = res.data.token;
+    this.tokenExpiriesAt = res.data.expiresAt;
+
+    this._storage.set('token', res.data.token);
+    this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+
+    if (this._watchForPageActivity) {
+      this._startRenewTokenLoop();
+    }
+  }
+
+  async logout() {
+    this.isAuthenticated = false;
+    delete this.token;
+    this._storage.remove('token');
+    this._storage.remove('tokenExpiriesAt');
+
+    this._stopRenewTokenLoop();
+  }
+
+  _restoreExistingSession() {
+    this._token = this._storage.get('token');
+  }
+
+  _startRenewTokenLoop() {
+    const startTokenRenewTimeout = async () => {
+      if (this._tokenRenewTimeout) {
+        this._tokenRenewTimeout.clear();
+        this._tokenRenewTimeout = null;
+      }
+
+      const renewTokenIn = (new Date(this._tokenExpiriesAt)).getTime() - Date.now();
+
+      this._tokenRenewTimeout = setTimeout(async () => {
+        const res = await this.put('/token');
+
+        this.tokenExpiriesAt = res.data.expiresAt;
+        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+      }, renewTokenIn);
+    };
+
+    const startInactivityTimeout = async () => {
+      if (this._inactivityTimeout) {
+        this._inactivityTimeout.clear();
+        this._inactivityTimeout = null;
+      }
+      this._inactivityTimeout = setTimeout(() => {
+        this.delete('/token');
+        this.emit('session-expired');
+      }, 1000 * 20); // 20 minutes
+    };
+
+    const inactivityCheck = () => {
+      if (this._pageActivityDetected) {
+        this._pageActivityDetected = false;
+        return;
+      }
+      startInactivityTimeout();
+    };
+
+    this._inactivityCheckInterval = setInterval(inactivityCheck, 500);
+    startTokenRenewTimeout();
+  }
+
+  _stopRenewTokenLoop() {
+    if (this._tokenRenewTimeout) {
+      this._tokenRenewTimeout.clear();
+      this._tokenRenewTimeout = null;
+    }
+    if (this._inactivityTimeout) {
+      this._inactivityTimeout.clear();
+      this._inactivityTimeout = null;
+    }
+    if (this._inactivityCheckInterval) {
+      this._inactivityCheckInterval.clear();
+      this._inactivityCheckInterval = null;
+    }
+  }
+
+  static _fetchOptions(opts = {}) {
+    return {
+      method : opts.method || 'GET',
+      body   : opts.data ? JSON.stringify(opts.data) : undefined,
+      headers: { 'Content-Type': 'application/json' }
+    };
+  }
+
+  static _responseHandler(res, body) {
     if (res.status > 500) { throw new Error(`API Server Error ${res.status}`); }
     if (res.status > 300) { throw new Error(body || res.statusText); }
     return body;
