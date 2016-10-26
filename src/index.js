@@ -34,7 +34,7 @@ class HTTP extends EventEmitter {
   async get(path, params, auth = true) {
     try {
       const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }));
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }), auth);
 
       const res  = await fetch(url, config);
       const body = await res.json();
@@ -49,7 +49,7 @@ class HTTP extends EventEmitter {
   async post(path, data, auth = true) {
     try {
       const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }));
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }), auth);
 
       const res  = await fetch(url, config);
       const body = await res.json();
@@ -64,7 +64,7 @@ class HTTP extends EventEmitter {
   async put(path, data, auth = true) {
     try {
       const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }));
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }), auth);
 
       const res  = await fetch(url, config);
       const body = await res.json();
@@ -76,10 +76,10 @@ class HTTP extends EventEmitter {
     }
   }
 
-  async del(path, config = {}, auth = true) {
+  async del(path, auth = true) {
     try {
       const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }));
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }), auth);
 
       const res  = await fetch(url, config);
       const body = await res.json();
