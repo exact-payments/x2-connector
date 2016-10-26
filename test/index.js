@@ -1,3 +1,4 @@
+require('isomorphic-fetch');
 require('babel-polyfill');
 
 // require all test files (files that ends with .spec.js)

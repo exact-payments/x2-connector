@@ -1,100 +1,191 @@
-import axios            from 'axios';
+import 'whatwg-fetch';
 import { EventEmitter } from 'events';
+import Storage          from '@fintechdev/x2-service-storage';
+import setTimeout       from 'relign/set-timeout';
+import setInterval      from 'relign/set-interval';
 
 
 class HTTP extends EventEmitter {
   constructor() {
     super();
-    this._middlewares  = [];
-    this._timeout      = 10000;
-    this.prefixEmitter = '';
+
+    this.isAuthenticated = false;
+    this.token           = null;
+    this.tokenExpiriesAt = null;
+
+    this._baseUrl     = '';
+    this._middlewares = [];
+
+    this._storage                 = new Storage();
+    this._inactivityCheckInterval = null;
+    this._tokenRenewTimeout       = null;
+    this._inactivityTimeout       = null;
+    this._pageActivityDetected    = false;
+    this._watchForPageActivity    = false;
+
+    this._restoreExistingSession();
   }
 
   init(opts = {}) {
-    if (!opts.baseURL) { throw new Error('Unable to init http service, missing baseURL attribute'); }
-    if (opts.timeout) { this._timeout = opts.timeout; }
-    if (opts.prefixEmitter) {
-      this._prefixEmitter = opts.prefixEmitter;
-      delete opts.prefixEmitter;
-    }
-    if (opts.middlewares) {
-      this._middlewares = opts.middlewares;
-      delete opts.middlewares;
-    }
-    this._axios = axios.create(opts);
+    this._baseUrl     = opts.baseURL;
+    this._middlewares = opts.middlewares || [];
   }
 
-  async get(path, params, config = {}, auth = true) {
-    if (!this._axios) { throw new Error('Library has not being initialized'); }
-
-    config.params = params;
+  async get(path, params, auth = true) {
     try {
-      return await this._axios.get(path, this._runMiddlewares(config, auth));
+      const url    = `${this._baseUrl}${path}`;
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }));
+
+      const res  = await fetch(url, config);
+      const body = await res.json();
+
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
-      const message = this.constructor.errorHandler(err);
-      this.emit(`${this._prefixEmitter}-http-error`, message);
-      throw (message);
+      this.emit('http-client:error', err);
+      throw err;
     }
   }
 
-  async post(path, data, config = {}, auth = true) {
-    if (!this._axios) { throw new Error('Library has not being initialized'); }
+  async post(path, data, auth = true) {
     try {
-      return await this._axios.post(path, data, this._runMiddlewares(config, auth));
+      const url    = `${this._baseUrl}${path}`;
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }));
+
+      const res  = await fetch(url, config);
+      const body = await res.json();
+
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
-      const message = this.constructor.errorHandler(err);
-      this.emit(`${this._prefixEmitter}-http-error`, message);
-      throw (message);
+      this.emit('http-client:error', err);
+      throw err;
     }
   }
 
-  async put(path, data, config = {}, auth = true) {
-    if (!this._axios) { throw new Error('Library has not being initialized'); }
+  async put(path, data, auth = true) {
     try {
-      return await this._axios.put(path, data, this._runMiddlewares(config, auth));
+      const url    = `${this._baseUrl}${path}`;
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }));
+
+      const res  = await fetch(url, config);
+      const body = await res.json();
+
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
-      const message = this.constructor.errorHandler(err);
-      this.emit(`${this._prefixEmitter}-http-error`, message);
-      throw (message);
+      this.emit('http-client:error', err);
+      throw err;
     }
   }
 
   async del(path, config = {}, auth = true) {
-    if (!this._axios) { throw new Error('Library has not being initialized'); }
     try {
-      return await this._axios.delete(path, this._runMiddlewares(config, auth));
+      const url    = `${this._baseUrl}${path}`;
+      const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }));
+
+      const res  = await fetch(url, config);
+      const body = await res.json();
+
+      return this.constructor._responseHandler(res, body);
     } catch (err) {
-      const message = this.constructor.errorHandler(err);
-      this.emit(`${this._prefixEmitter}-http-error`, message);
-      throw (message);
+      this.emit('http-client:error', err);
+      throw err;
     }
   }
 
-  static errorHandler(response) {
-    if (response instanceof Error) { return `Unknown Error: ${response}`; }
-    if (!response.status) { return 'Unknown Error'; }
+  async login(email, password) {
+    const res = await this.post('/token', { email, password });
 
-    switch (response.status) {
-      case 400:
-        return response.data || response;
-      case 401:
-        if (response.data && response.data.length > 0) { return response.data[0].message; }
-        break;
-      case 402:
-        return 'Error 402: You must upgrade your account to do that';
-      case 403:
-        return 'Error 403: You are not authorized to access that';
-      case 404:
-        return 'Requested Resource Not Found';
-      case 429:
-        return 'Rate Limited';
-      case 500:
-      case 502:
-      case 503:
-        return `API Server Error ${response.status}`;
-      default:
-        return `API Request Error ${response.status}`;
+    this.isAuthenticated = true;
+    this.token           = res.data.token;
+    this.tokenExpiriesAt = res.data.expiresAt;
+
+    this._storage.set('token', res.data.token);
+    this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+
+    if (this._watchForPageActivity) {
+      this._startRenewTokenLoop();
     }
+  }
+
+  async logout() {
+    this.isAuthenticated = false;
+    delete this.token;
+    this._storage.remove('token');
+    this._storage.remove('tokenExpiriesAt');
+
+    this._stopRenewTokenLoop();
+  }
+
+  _restoreExistingSession() {
+    this._token = this._storage.get('token');
+  }
+
+  _startRenewTokenLoop() {
+    const startTokenRenewTimeout = async () => {
+      if (this._tokenRenewTimeout) {
+        this._tokenRenewTimeout.clear();
+        this._tokenRenewTimeout = null;
+      }
+
+      const renewTokenIn = (new Date(this._tokenExpiriesAt)).getTime() - Date.now();
+
+      this._tokenRenewTimeout = setTimeout(async () => {
+        const res = await this.put('/token');
+
+        this.tokenExpiriesAt = res.data.expiresAt;
+        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+      }, renewTokenIn);
+    };
+
+    const startInactivityTimeout = async () => {
+      if (this._inactivityTimeout) {
+        this._inactivityTimeout.clear();
+        this._inactivityTimeout = null;
+      }
+      this._inactivityTimeout = setTimeout(() => {
+        this.delete('/token');
+        this.emit('session-expired');
+      }, 1000 * 20); // 20 minutes
+    };
+
+    const inactivityCheck = () => {
+      if (this._pageActivityDetected) {
+        this._pageActivityDetected = false;
+        return;
+      }
+      startInactivityTimeout();
+    };
+
+    this._inactivityCheckInterval = setInterval(inactivityCheck, 500);
+    startTokenRenewTimeout();
+  }
+
+  _stopRenewTokenLoop() {
+    if (this._tokenRenewTimeout) {
+      this._tokenRenewTimeout.clear();
+      this._tokenRenewTimeout = null;
+    }
+    if (this._inactivityTimeout) {
+      this._inactivityTimeout.clear();
+      this._inactivityTimeout = null;
+    }
+    if (this._inactivityCheckInterval) {
+      this._inactivityCheckInterval.clear();
+      this._inactivityCheckInterval = null;
+    }
+  }
+
+  static _fetchOptions(opts = {}) {
+    return {
+      method : opts.method || 'GET',
+      body   : opts.data ? JSON.stringify(opts.data) : undefined,
+      headers: { 'Content-Type': 'application/json' }
+    };
+  }
+
+  static _responseHandler(res, body) {
+    if (res.status > 500) { throw new Error(`API Server Error ${res.status}`); }
+    if (res.status > 300) { throw new Error(body || res.statusText); }
+    return body;
   }
 
   _runMiddlewares(config, auth) {
