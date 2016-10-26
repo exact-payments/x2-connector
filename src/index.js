@@ -91,6 +91,13 @@ class HTTP extends EventEmitter {
     }
   }
 
+  watchForInactivity() {
+    if (this._watchForPageActivity) { return; }
+    window.addEventListener('keydown',   () => { this._pageActivityDetected = true; });
+    window.addEventListener('mousemove', () => { this._pageActivityDetected = true; });
+    this._watchForPageActivity = true;
+  }
+
   async login(email, password) {
     const res = await this.post('/token', { email, password });
 
@@ -113,6 +120,14 @@ class HTTP extends EventEmitter {
     this._storage.remove('tokenExpiriesAt');
 
     this._stopRenewTokenLoop();
+  }
+
+  async requestPasswordReset(email) {
+    await this.post(`/user/send-password-reset/${email}`);
+  }
+
+  async passwordReset(newPassword, passwordResetToken) {
+    await this.post(`/user/reset-password/${passwordResetToken}`, { newPassword });
   }
 
   _restoreExistingSession() {
