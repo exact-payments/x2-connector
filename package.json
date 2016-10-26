@@ -1,6 +1,6 @@
 {
   "name": "@fintechdev/http-client",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "dist/http-client.min.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
