@@ -36,8 +36,7 @@ const config = {
     loaders: [{
       test   : /(\.jsx|\.js)$/,
       loader : 'babel',
-      include: projectRoot,
-      exclude: /(node_modules|bower_components)/
+      include: projectRoot
     }]
   },
   resolve: {
