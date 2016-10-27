@@ -27,68 +27,40 @@ class HTTP extends EventEmitter {
   }
 
   init(opts = {}) {
-    this._baseUrl     = opts.baseURL;
+    this._baseUrl     = opts.baseUrl;
     this._middlewares = opts.middlewares || [];
   }
 
   async get(path, params, auth = true) {
-    try {
-      const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }), auth);
+    const url    = `${this._baseUrl}${path}`;
+    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }), auth);
 
-      const res  = await fetch(url, config);
-      const body = await res.json();
-
-      return this.constructor._responseHandler(res, body);
-    } catch (err) {
-      this.emit('http-client:error', err);
-      throw err;
-    }
+    const response = await fetch(url, config);
+    return await this._responseHandler(response);
   }
 
   async post(path, data, auth = true) {
-    try {
-      const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }), auth);
+    const url    = `${this._baseUrl}${path}`;
+    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }), auth);
 
-      const res  = await fetch(url, config);
-      const body = await res.json();
-
-      return this.constructor._responseHandler(res, body);
-    } catch (err) {
-      this.emit('http-client:error', err);
-      throw err;
-    }
+    const response = await fetch(url, config);
+    return await this._responseHandler(response);
   }
 
   async put(path, data, auth = true) {
-    try {
-      const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }), auth);
+    const url    = `${this._baseUrl}${path}`;
+    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }), auth);
 
-      const res  = await fetch(url, config);
-      const body = await res.json();
-
-      return this.constructor._responseHandler(res, body);
-    } catch (err) {
-      this.emit('http-client:error', err);
-      throw err;
-    }
+    const response = await fetch(url, config);
+    return await this._responseHandler(response);
   }
 
   async del(path, auth = true) {
-    try {
-      const url    = `${this._baseUrl}${path}`;
-      const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }), auth);
+    const url    = `${this._baseUrl}${path}`;
+    const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }), auth);
 
-      const res  = await fetch(url, config);
-      const body = await res.json();
-
-      return this.constructor._responseHandler(res, body);
-    } catch (err) {
-      this.emit('http-client:error', err);
-      throw err;
-    }
+    const response = await fetch(url, config);
+    return await this._responseHandler(response);
   }
 
   watchForInactivity() {
@@ -102,11 +74,11 @@ class HTTP extends EventEmitter {
     const res = await this.post('/token', { email, password });
 
     this.isAuthenticated = true;
-    this.token           = res.data.token;
-    this.tokenExpiriesAt = res.data.expiresAt;
+    this.token           = res.token;
+    this.tokenExpiriesAt = res.expiresAt;
 
-    this._storage.set('token', res.data.token);
-    this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+    this._storage.set('token', res.token);
+    this._storage.set('tokenExpiriesAt', res.expiresAt);
 
     if (this._watchForPageActivity) {
       this._startRenewTokenLoop();
@@ -146,8 +118,8 @@ class HTTP extends EventEmitter {
       this._tokenRenewTimeout = setTimeout(async () => {
         const res = await this.put('/token');
 
-        this.tokenExpiriesAt = res.data.expiresAt;
-        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+        this.tokenExpiriesAt = res.expiresAt;
+        this._storage.set('tokenExpiriesAt', res.expiresAt);
       }, renewTokenIn);
     };
 
@@ -192,15 +164,18 @@ class HTTP extends EventEmitter {
   static _fetchOptions(opts = {}) {
     return {
       method : opts.method || 'GET',
-      body   : opts.data ? JSON.stringify(opts.data) : undefined,
+      body   : opts.body ? JSON.stringify(opts.body) : undefined,
       headers: { 'Content-Type': 'application/json' }
     };
   }
 
-  static _responseHandler(res, body) {
-    if (res.status > 500) { throw new Error(`API Server Error ${res.status}`); }
-    if (res.status > 300) { throw new Error(body || res.statusText); }
-    return body;
+  async _responseHandler(response) {
+    if (response.ok) { return await response.json(); }
+    this.emit('http-client:error', {
+      status: response.status,
+      statusText: response.statusText
+    });
+    throw Error(`${response.status}: ${response.statusText}`);
   }
 
   _runMiddlewares(config, auth) {
