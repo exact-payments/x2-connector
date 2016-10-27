@@ -33,7 +33,7 @@ class HTTP extends EventEmitter {
 
   async get(path, params, auth = true) {
     const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: params }), auth);
+    const config = this._runMiddlewares(this._fetchOptions({ body: params }), auth);
 
     const response = await fetch(url, config);
     return await this._responseHandler(response);
@@ -41,7 +41,7 @@ class HTTP extends EventEmitter {
 
   async post(path, data, auth = true) {
     const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'POST' }), auth);
+    const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'POST' }), auth);
 
     const response = await fetch(url, config);
     return await this._responseHandler(response);
@@ -49,7 +49,7 @@ class HTTP extends EventEmitter {
 
   async put(path, data, auth = true) {
     const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this.constructor._fetchOptions({ body: data, method: 'PUT' }), auth);
+    const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'PUT' }), auth);
 
     const response = await fetch(url, config);
     return await this._responseHandler(response);
@@ -57,7 +57,7 @@ class HTTP extends EventEmitter {
 
   async del(path, auth = true) {
     const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this.constructor._fetchOptions({ method: 'DELETE' }), auth);
+    const config = this._runMiddlewares(this._fetchOptions({ method: 'DELETE' }), auth);
 
     const response = await fetch(url, config);
     return await this._responseHandler(response);
@@ -81,7 +81,7 @@ class HTTP extends EventEmitter {
     this._storage.set('tokenExpiriesAt', res.expiresAt);
 
     if (this._watchForPageActivity) {
-      this._startRenewTokenLoop();
+      // this._startRenewTokenLoop();
     }
   }
 
@@ -161,21 +161,23 @@ class HTTP extends EventEmitter {
     }
   }
 
-  static _fetchOptions(opts = {}) {
+  _fetchOptions(opts = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.isAuthenticated) { headers.authorization = this.token; }
     return {
       method : opts.method || 'GET',
       body   : opts.body ? JSON.stringify(opts.body) : undefined,
-      headers: { 'Content-Type': 'application/json' }
+      headers
     };
   }
 
   async _responseHandler(response) {
     if (response.ok) { return await response.json(); }
     this.emit('http-client:error', {
-      status: response.status,
+      status    : response.status,
       statusText: response.statusText
     });
-    throw Error(`${response.status}: ${response.statusText}`);
+    throw new Error(`${response.status}: ${response.statusText}`);
   }
 
   _runMiddlewares(config, auth) {
