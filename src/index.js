@@ -9,7 +9,6 @@ class HTTP extends EventEmitter {
   constructor() {
     super();
 
-    this.isAuthenticated = false;
     this.token           = null;
     this.tokenExpiriesAt = null;
 
@@ -24,6 +23,8 @@ class HTTP extends EventEmitter {
     this._watchForPageActivity    = false;
 
     this._restoreExistingSession();
+
+    this.isAuthenticated = this.token !== null;
   }
 
   init(opts = {}) {
@@ -103,7 +104,7 @@ class HTTP extends EventEmitter {
   }
 
   _restoreExistingSession() {
-    this._token = this._storage.get('token');
+    this.token = this._storage.get('token') || null;
   }
 
   _startRenewTokenLoop() {
