@@ -1,1 +1,11 @@
 src
+test
+.babelrc
+.editorconfig
+.eslintrc
+.lgtm
+circle.yml
+karma.conf.js
+MAINTAINERS
+webpack.config.js
+yarn.lock
