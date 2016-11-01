@@ -17,7 +17,7 @@ if (env === 'build') {
 }
 
 const config = {
-  entry: ['babel-polyfill', 'whatwg-fetch', `${__dirname}/src/index.js`],
+  entry: ['whatwg-fetch', `${__dirname}/src/index.js`],
   devtool: 'source-map',
   output: {
     path          : `${__dirname}/dist`,
