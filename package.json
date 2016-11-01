@@ -1,8 +1,8 @@
 {
   "name": "@fintechdev/http-client",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
-  "main": "dist/http-client.min.js",
+  "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
   "scripts": {
     "build": "webpack --mode=build",

@@ -82,7 +82,7 @@ class HTTP extends EventEmitter {
     this._storage.set('tokenExpiriesAt', res.expiresAt);
 
     if (this._watchForPageActivity) {
-      // this._startRenewTokenLoop();
+      this._startRenewTokenLoop();
     }
   }
 
