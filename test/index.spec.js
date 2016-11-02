@@ -10,7 +10,7 @@ describe('HTTP -> http', () => {
     expect(http.on).toBeTruthy();
   });
 
-  it('Initilizes attributes', () => {
+  it('Initialize attributes', () => {
     expect(http.token).toBe(null);
     expect(http.tokenExpiriesAt).toBe(null);
 
