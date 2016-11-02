@@ -25,9 +25,7 @@
     "no-mixed-operators": 0
   },
   "globals": {
-    "document": true,
     "window": true,
-    "fetch": true,
-    "Response": true
+    "fetch": true
   }
 }
