@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "whatwg-fetch": "^1.0.0"
-  }
+  },
   "devDependencies": {
     "@fintechdev/x2-service-storage": "0.0.2",
     "eslint": "^3.9.1",
