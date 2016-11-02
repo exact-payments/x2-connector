@@ -1,8 +1,8 @@
-import 'whatwg-fetch';
-import { EventEmitter } from 'events';
-import Storage          from '@fintechdev/x2-service-storage';
-import setTimeout       from 'relign/set-timeout';
-import setInterval      from 'relign/set-interval';
+require('whatwg-fetch');
+const { EventEmitter } = require('events');
+const Storage          = require('@fintechdev/x2-service-storage');
+const setTimeout       = require('relign/set-timeout');
+const setInterval      = require('relign/set-interval');
 
 
 class HTTP extends EventEmitter {
@@ -32,36 +32,36 @@ class HTTP extends EventEmitter {
     this._middlewares = opts.middlewares || [];
   }
 
-  async get(path, params, auth = true) {
+  get(path, params, auth = true) {
     const url    = `${this._baseUrl}${path}`;
     const config = this._runMiddlewares(this._fetchOptions({ body: params }), auth);
 
-    const response = await fetch(url, config);
-    return await this._responseHandler(response);
+    return fetch(url, config)
+    .then(res => this._responseHandler(res));
   }
 
-  async post(path, data, auth = true) {
+  post(path, data, auth = true) {
     const url    = `${this._baseUrl}${path}`;
     const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'POST' }), auth);
 
-    const response = await fetch(url, config);
-    return await this._responseHandler(response);
+    return fetch(url, config)
+    .then(res => this._responseHandler(res));
   }
 
-  async put(path, data, auth = true) {
+  put(path, data, auth = true) {
     const url    = `${this._baseUrl}${path}`;
     const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'PUT' }), auth);
 
-    const response = await fetch(url, config);
-    return await this._responseHandler(response);
+    return fetch(url, config)
+    .then(res => this._responseHandler(res));
   }
 
-  async del(path, auth = true) {
+  del(path, auth = true) {
     const url    = `${this._baseUrl}${path}`;
     const config = this._runMiddlewares(this._fetchOptions({ method: 'DELETE' }), auth);
 
-    const response = await fetch(url, config);
-    return await this._responseHandler(response);
+    return fetch(url, config)
+    .then(res => this._responseHandler(res));
   }
 
   watchForInactivity() {
@@ -71,36 +71,38 @@ class HTTP extends EventEmitter {
     this._watchForPageActivity = true;
   }
 
-  async login(email, password) {
-    const res = await this.post('/token', { email, password });
+  login(email, password) {
+    return this.post('/token', { email, password })
+    .then((res) => {
+      this.isAuthenticated = true;
+      this.token           = res.token;
+      this.tokenExpiriesAt = res.expiresAt;
 
-    this.isAuthenticated = true;
-    this.token           = res.token;
-    this.tokenExpiriesAt = res.expiresAt;
+      this._storage.set('token', res.token);
+      this._storage.set('tokenExpiriesAt', res.expiresAt);
 
-    this._storage.set('token', res.token);
-    this._storage.set('tokenExpiriesAt', res.expiresAt);
-
-    if (this._watchForPageActivity) {
-      this._startRenewTokenLoop();
-    }
+      if (this._watchForPageActivity) { this._startRenewTokenLoop(); }
+    });
   }
 
-  async logout() {
+  logout() {
     this.isAuthenticated = false;
     delete this.token;
     this._storage.remove('token');
     this._storage.remove('tokenExpiriesAt');
 
     this._stopRenewTokenLoop();
+    return Promise.resolve();
   }
 
-  async requestPasswordReset(email) {
-    await this.post(`/user/send-password-reset/${email}`);
+  resetPasswordRequest(email) {
+    return this.post(`/user/send-password-reset/${email}`)
+    .then(res => this._responseHandler(res));
   }
 
-  async passwordReset(newPassword, passwordResetToken) {
-    await this.post(`/user/reset-password/${passwordResetToken}`, { newPassword });
+  resetPassword(newPassword, passwordResetToken) {
+    return this.post(`/user/reset-password/${passwordResetToken}`, { newPassword })
+    .then(res => this._responseHandler(res));
   }
 
   _restoreExistingSession() {
@@ -108,7 +110,7 @@ class HTTP extends EventEmitter {
   }
 
   _startRenewTokenLoop() {
-    const startTokenRenewTimeout = async () => {
+    const startTokenRenewTimeout = () => {
       if (this._tokenRenewTimeout) {
         this._tokenRenewTimeout.clear();
         this._tokenRenewTimeout = null;
@@ -116,23 +118,22 @@ class HTTP extends EventEmitter {
 
       const renewTokenIn = (new Date(this._tokenExpiriesAt)).getTime() - Date.now();
 
-      this._tokenRenewTimeout = setTimeout(async () => {
-        const res = await this.put('/token');
-
+      this._tokenRenewTimeout = setTimeout(() => this.put('/token')
+      .then((res) => {
         this.tokenExpiriesAt = res.expiresAt;
         this._storage.set('tokenExpiriesAt', res.expiresAt);
-      }, renewTokenIn);
+      }), renewTokenIn);
     };
 
-    const startInactivityTimeout = async () => {
+    const startInactivityTimeout = () => {
       if (this._inactivityTimeout) {
         this._inactivityTimeout.clear();
         this._inactivityTimeout = null;
       }
       this._inactivityTimeout = setTimeout(() => {
-        this.delete('/token');
-        this.emit('session-expired');
-      }, 1000 * 20); // 20 minutes
+        this.delete('/token')
+        .then(res => this.emit('session-expired'));
+      }, 1000 * 60 * 20); // 20 minutes
     };
 
     const inactivityCheck = () => {
@@ -163,22 +164,26 @@ class HTTP extends EventEmitter {
   }
 
   _fetchOptions(opts = {}) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (this.isAuthenticated) { headers.authorization = this.token; }
-    return {
+    const fetchOpts = {
       method : opts.method || 'GET',
-      body   : opts.body ? JSON.stringify(opts.body) : undefined,
-      headers
+      headers: { 'Content-Type': 'application/json' }
     };
+    if (this.isAuthenticated) {
+      fetchOpts.headers.authorization = this.token;
+    }
+    if (opts.body) {
+      fetchOpts.body = JSON.stringify(opts.body);
+    }
+    return fetchOpts;
   }
 
-  async _responseHandler(response) {
-    if (response.ok) { return await response.json(); }
+  _responseHandler(response) {
+    if (response.ok) { return response.json(); }
     this.emit('http-client:error', {
       status    : response.status,
       statusText: response.statusText
     });
-    throw new Error(`${response.status}: ${response.statusText}`);
+    return Promise.reject(new Error(`${response.status}: ${response.statusText}`));
   }
 
   _runMiddlewares(config, auth) {
@@ -187,6 +192,5 @@ class HTTP extends EventEmitter {
   }
 }
 
-const http = new HTTP();
-http.HTTP = HTTP;
-export default http;
+exports = module.exports = new HTTP();
+exports.HTTP = HTTP;
