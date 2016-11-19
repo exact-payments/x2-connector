@@ -1,6 +1,6 @@
 {
   "name": "@fintechdev/http-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "http connector to communicate with x2 gateway",
   "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
