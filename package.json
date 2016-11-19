@@ -15,6 +15,7 @@
     "eslint": "eslint . --ext .js"
   },
   "dependencies": {
+    "relign": "^0.5.0",
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
