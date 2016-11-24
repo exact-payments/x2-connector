@@ -8,6 +8,9 @@ class HTTP extends EventEmitter {
   constructor() {
     super();
 
+    this._env     = 'DEV';
+    this._baseUrl = 'http://localhost:8080';
+
     this.token           = null;
     this.tokenExpiriesAt = null;
 
@@ -27,14 +30,17 @@ class HTTP extends EventEmitter {
   }
 
   init(opts = {}) {
-    trae.baseUrl(opts.baseUrl);
-  }
+    if (!opts.configPath) {
+      trae.baseUrl(this.baseUrl);
+      return Promise.resolve();
+    }
 
-  watchForInactivity() {
-    if (this._watchForPageActivity) { return; }
-    window.addEventListener('keydown',   () => { this._pageActivityDetected = true; });
-    window.addEventListener('mousemove', () => { this._pageActivityDetected = true; });
-    this._watchForPageActivity = true;
+    return trae.get(opts.configPath)
+    .then((config) => {
+      config.env && (this._env = config.env);
+      const baseUrl = config.api && config.api.url;
+      trae.baseUrl(baseUrl || this._baseUrl);
+    });
   }
 
   login(email, password) {
@@ -64,11 +70,20 @@ class HTTP extends EventEmitter {
   }
 
   resetPasswordRequest(email) {
-    return trae.post(`/user/send-password-reset/${email}`);
+    return trae.post(`/user/send-password-reset/${email}`)
+    .then(response => response.data);
   }
 
   resetPassword(newPassword, passwordResetToken) {
-    return trae.post(`/user/reset-password/${passwordResetToken}`, { newPassword });
+    return trae.post(`/user/reset-password/${passwordResetToken}`, { newPassword })
+    .then(response => response.data);
+  }
+
+  watchForInactivity() {
+    if (this._watchForPageActivity) { return; }
+    window.addEventListener('keydown',   () => { this._pageActivityDetected = true; });
+    window.addEventListener('mousemove', () => { this._pageActivityDetected = true; });
+    this._watchForPageActivity = true;
   }
 
   _restoreExistingSession() {
