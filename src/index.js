@@ -43,6 +43,14 @@ class HTTP extends EventEmitter {
     });
   }
 
+  getEnvironment() {
+    return this._env;
+  }
+
+  isProd() {
+    return this._env === 'PROD';
+  }
+
   login(email, password) {
     return trae.post('/token', { email, password })
     .then((res) => {
