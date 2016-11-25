@@ -1,19 +1,18 @@
-require('whatwg-fetch');
 const { EventEmitter } = require('events');
-const Storage          = require('@fintechdev/x2-service-storage');
+const trae             = require('trae');
 const setTimeout       = require('relign/set-timeout');
 const setInterval      = require('relign/set-interval');
-
+const Storage          = require('@fintechdev/x2-service-storage');
 
 class HTTP extends EventEmitter {
   constructor() {
     super();
 
+    this._env     = 'DEV';
+    this._baseUrl = 'http://localhost:8080';
+
     this.token           = null;
     this.tokenExpiriesAt = null;
-
-    this._baseUrl     = '';
-    this._middlewares = [];
 
     this._storage                 = new Storage();
     this._inactivityCheckInterval = null;
@@ -25,63 +24,46 @@ class HTTP extends EventEmitter {
     this._restoreExistingSession();
 
     this.isAuthenticated = this.token !== null;
+
+    this._initMethods();
+    this._initMiddlewares();
   }
 
   init(opts = {}) {
-    this._baseUrl     = opts.baseUrl;
-    this._middlewares = opts.middlewares || [];
+    if (!opts.configPath) {
+      trae.baseUrl(this.baseUrl);
+      return Promise.resolve();
+    }
+
+    return trae.get(opts.configPath)
+    .then((res) => {
+      res.data.env && (this._env = res.data.env);
+      const baseUrl = res.data.api && res.data.api.url;
+      trae.baseUrl(baseUrl || this._baseUrl);
+    });
   }
 
-  get(path, params, auth = true) {
-    const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this._fetchOptions({ body: params }), auth);
-
-    return fetch(url, config)
-    .then(res => this._responseHandler(res));
+  getEnvironment() {
+    return this._env;
   }
 
-  post(path, data, auth = true) {
-    const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'POST' }), auth);
-
-    return fetch(url, config)
-    .then(res => this._responseHandler(res));
-  }
-
-  put(path, data, auth = true) {
-    const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this._fetchOptions({ body: data, method: 'PUT' }), auth);
-
-    return fetch(url, config)
-    .then(res => this._responseHandler(res));
-  }
-
-  del(path, auth = true) {
-    const url    = `${this._baseUrl}${path}`;
-    const config = this._runMiddlewares(this._fetchOptions({ method: 'DELETE' }), auth);
-
-    return fetch(url, config)
-    .then(res => this._responseHandler(res));
-  }
-
-  watchForInactivity() {
-    if (this._watchForPageActivity) { return; }
-    window.addEventListener('keydown',   () => { this._pageActivityDetected = true; });
-    window.addEventListener('mousemove', () => { this._pageActivityDetected = true; });
-    this._watchForPageActivity = true;
+  isProd() {
+    return this._env === 'PROD';
   }
 
   login(email, password) {
-    return this.post('/token', { email, password })
+    return trae.post('/token', { email, password })
     .then((res) => {
       this.isAuthenticated = true;
-      this.token           = res.token;
-      this.tokenExpiriesAt = res.expiresAt;
+      this.token           = res.data.token;
+      this.tokenExpiriesAt = res.data.expiresAt;
 
-      this._storage.set('token', res.token);
-      this._storage.set('tokenExpiriesAt', res.expiresAt);
+      this._storage.set('token', res.data.token);
+      this._storage.set('tokenExpiriesAt', res.data.expiresAt);
 
-      if (this._watchForPageActivity) { this._startRenewTokenLoop(); }
+      if (this._watchForPageActivity) {
+        this._startRenewTokenLoop();
+      }
     });
   }
 
@@ -96,13 +78,20 @@ class HTTP extends EventEmitter {
   }
 
   resetPasswordRequest(email) {
-    return this.post(`/user/send-password-reset/${email}`)
-    .then(res => this._responseHandler(res));
+    return trae.post(`/user/send-password-reset/${email}`)
+    .then(response => response.data);
   }
 
   resetPassword(newPassword, passwordResetToken) {
-    return this.post(`/user/reset-password/${passwordResetToken}`, { newPassword })
-    .then(res => this._responseHandler(res));
+    return trae.post(`/user/reset-password/${passwordResetToken}`, { newPassword })
+    .then(response => response.data);
+  }
+
+  watchForInactivity() {
+    if (this._watchForPageActivity) { return; }
+    window.addEventListener('keydown',   () => { this._pageActivityDetected = true; });
+    window.addEventListener('mousemove', () => { this._pageActivityDetected = true; });
+    this._watchForPageActivity = true;
   }
 
   _restoreExistingSession() {
@@ -116,12 +105,14 @@ class HTTP extends EventEmitter {
         this._tokenRenewTimeout = null;
       }
 
-      const renewTokenIn = (new Date(this._tokenExpiriesAt)).getTime() - Date.now();
+      const renewTokenIn = (new Date(this.tokenExpiriesAt)).getTime() - Date.now();
 
-      this._tokenRenewTimeout = setTimeout(() => this.put('/token')
+      console.log(renewTokenIn);
+
+      this._tokenRenewTimeout = setTimeout(() => trae.put('/token')
       .then((res) => {
-        this.tokenExpiriesAt = res.expiresAt;
-        this._storage.set('tokenExpiriesAt', res.expiresAt);
+        this.tokenExpiriesAt = res.data.expiresAt;
+        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
       }), renewTokenIn);
     };
 
@@ -163,32 +154,22 @@ class HTTP extends EventEmitter {
     }
   }
 
-  _fetchOptions(opts = {}) {
-    const fetchOpts = {
-      method : opts.method || 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    };
-    if (this.isAuthenticated) {
-      fetchOpts.headers.authorization = this.token;
-    }
-    if (opts.body) {
-      fetchOpts.body = JSON.stringify(opts.body);
-    }
-    return fetchOpts;
-  }
-
-  _responseHandler(response) {
-    if (response.ok) { return response.json(); }
-    this.emit('http-client:error', {
-      status    : response.status,
-      statusText: response.statusText
+  _initMethods() {
+    ['get', 'post', 'put', 'del'].forEach((method) => {
+      this[method] = (...args) => trae[method](...args)
+      .then(response => response.data);
     });
-    return Promise.reject(new Error(`${response.status}: ${response.statusText}`));
   }
 
-  _runMiddlewares(config, auth) {
-    this._middlewares.forEach(middleware => middleware(config, auth));
-    return config;
+  _initMiddlewares() {
+    trae.use({
+      config: (config) => {
+        if (this.isAuthenticated) {
+          config.headers.authorization = this.token;
+        }
+        return config;
+      }
+    });
   }
 }
 
