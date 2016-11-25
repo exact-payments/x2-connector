@@ -1,18 +1,14 @@
-# http-client
+# x2-connector
 
 
-### Development Setup
+### Usage
 
-```bash
-# install dependencies
-$ npm install
+```JavaScript
+const x2Connector = require('@fintechdev/x2-connector');
 
-# dev mode
-$ npm run dev
+x2Connector.init({ configPath: '/cfg/config.json' })
+.then(() => {
+  // Init App
+});
 
-# test
-$ npm run test
-
-# build
-$ npm run build
 ```
