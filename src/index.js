@@ -36,9 +36,9 @@ class HTTP extends EventEmitter {
     }
 
     return trae.get(opts.configPath)
-    .then((config) => {
-      config.env && (this._env = config.env);
-      const baseUrl = config.api && config.api.url;
+    .then((res) => {
+      res.data.env && (this._env = res.data.env);
+      const baseUrl = res.data.api && res.data.api.url;
       trae.baseUrl(baseUrl || this._baseUrl);
     });
   }

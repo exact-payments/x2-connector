@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "relign": "^0.5.0",
-    "trae": "0.0.6",
+    "trae": "0.0.8",
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
