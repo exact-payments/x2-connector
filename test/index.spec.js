@@ -24,7 +24,7 @@ describe('HTTP -> http', () => {
     expect(x2Connector._watchForPageActivity).toBeFalsy();
   });
 
-  describe('init', () => {
+  describe('init()', () => {
     it('Initilize default attributes', () => {
       const baseUrl = 'http://localhost:8080';
 
@@ -49,7 +49,7 @@ describe('HTTP -> http', () => {
     });
   });
 
-  describe('post', () => {
+  describe('post()', () => {
     it('makes a POST request to baseURL + path', () => {
       fetchMock.mock('http://localhost:8080/foo', {
         status: 200,
@@ -66,7 +66,7 @@ describe('HTTP -> http', () => {
     });
   });
 
-  describe('put', () => {
+  describe('put()', () => {
     it('makes a PUT request to baseURL + path', () => {
       fetchMock.mock('http://localhost:8080/foo', {
         status: 200,
@@ -83,7 +83,7 @@ describe('HTTP -> http', () => {
     });
   });
 
-  describe('del', () => {
+  describe('delete()', () => {
     it('makes a DEL request to baseURL + path', () => {
       fetchMock.mock('http://localhost:8080/foo', {
         status: 200,
@@ -96,6 +96,22 @@ describe('HTTP -> http', () => {
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
+      });
+    });
+  });
+
+  describe('login()', () => {
+    it('makes a post /token to login through X2 API', () => {
+      fetchMock.mock(`${x2Connector._baseUrl}/token`, {
+        status: 200,
+        body  : { token: '1234' }
+      }, {
+        method: 'POST'
+      });
+
+      x2Connector.login('user', 'password')
+      .then((res) => {
+        expect(res).toBe({ token: '1234' });
       });
     });
   });
