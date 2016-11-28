@@ -15,6 +15,7 @@ class HTTP extends EventEmitter {
 
     this.token           = null;
     this.tokenExpiriesAt = null;
+    this.tokenDuration   = 1000 * 60 * 20; // 20 minutes
 
     this._storage                 = new Storage();
     this._inactivityCheckInterval = null;
@@ -36,6 +37,8 @@ class HTTP extends EventEmitter {
       trae.baseUrl(this.baseUrl);
       return Promise.resolve();
     }
+
+    this.tokenDuration = opts.tokenDuration || this.tokenDuration;
 
     trae.use({
       reject(err) {
@@ -134,7 +137,7 @@ class HTTP extends EventEmitter {
       this._inactivityTimeout = setTimeout(() => {
         this.delete('/token')
         .then(res => this.emit(`${EVENT_PREFIX}:session-expired`));
-      }, 1000 * 60 * 20); // 20 minutes
+      }, this.tokenDuration); // 20 minutes
     };
 
     const inactivityCheck = () => {
