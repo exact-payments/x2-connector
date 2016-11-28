@@ -15,7 +15,7 @@ class HTTP extends EventEmitter {
 
     this.token           = null;
     this.tokenExpiriesAt = null;
-    this.tokenDuration   = 1000 * 60 * 20; // 20 minutes
+    this._tokenDuration   = 1000 * 60 * 20; // 20 minutes
 
     this._storage                 = new Storage();
     this._inactivityCheckInterval = null;
@@ -40,13 +40,14 @@ class HTTP extends EventEmitter {
       return Promise.resolve();
     }
 
-    this.tokenDuration = opts.tokenDuration || this.tokenDuration;
 
     this._setUpMiddlewares();
 
     return trae.get(opts.configPath)
     .then((res) => {
       res.data.env && (this._env = res.data.env);
+      res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
+
       const baseUrl = res.data.api && res.data.api.url;
       trae.baseUrl(baseUrl || this._baseUrl);
     });
@@ -134,7 +135,7 @@ class HTTP extends EventEmitter {
       this._inactivityTimeout = setTimeout(() => {
         this.delete('/token')
         .then(res => this.emit(`${EVENT_PREFIX}:session-expired`));
-      }, this.tokenDuration); // 20 minutes
+      }, this._tokenDuration); // 20 minutes
     };
 
     const inactivityCheck = () => {
