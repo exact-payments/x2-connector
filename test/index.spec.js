@@ -99,4 +99,16 @@ describe('HTTP -> http', () => {
       });
     });
   });
+
+  describe('getEnvironment()', () => {
+    it('returns the current environment', () => {
+      expect(x2Connector.getEnvironment()).toBe('DEV');
+    });
+  });
+
+  describe('isProd()', () => {
+    it('returns false if current environment is not PROD', () => {
+      expect(x2Connector.isProd()).toBe(false);
+    });
+  });
 });
