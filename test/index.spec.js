@@ -13,7 +13,7 @@ describe('HTTP -> http', () => {
   it('Initialize attributes', () => {
     expect(x2Connector.token).toBe(null);
     expect(x2Connector.tokenExpiriesAt).toBe(null);
-    expect(x2Connector.tokenDuration).toBe(1000 * 60 * 20);
+    expect(x2Connector._tokenDuration).toBe(1000 * 60 * 20);
 
     expect(x2Connector._baseUrl).toEqual('http://localhost:8080');
     expect(x2Connector._middlewares).toEqual({});
@@ -25,16 +25,21 @@ describe('HTTP -> http', () => {
   });
 
   describe('init()', () => {
-    it('Initilize default attributes', () => {
+    it.only('Initilize default attributes', () => {
       const baseUrl = 'http://localhost:8080';
+      const middlewares = {
+        config  : [() => {}],
+        reject  : [() => {}],
+        fullfill: [() => {}]
+      };
 
-      x2Connector.init({ middlewares: [() => {}], baseUrl });
+      x2Connector.init({ middlewares, baseUrl });
 
       expect(x2Connector._baseUrl).toBe(baseUrl);
     });
   });
 
-  describe('get', () => {
+  describe('get()', () => {
     it('makes a GET request to baseURL + path', () => {
       fetchMock.mock('http://localhost:8080/foo', {
         status: 200,

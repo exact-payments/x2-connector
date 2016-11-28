@@ -24,8 +24,6 @@ class HTTP extends EventEmitter {
     this._pageActivityDetected    = false;
     this._watchForPageActivity    = false;
 
-    this._middlewares = {};
-
     this._restoreExistingSession();
 
     this.isAuthenticated = this.token !== null;
@@ -35,13 +33,13 @@ class HTTP extends EventEmitter {
   }
 
   init(opts = {}) {
+    this._setUpMiddlewares(opts.middlewares);
+
     if (!opts.configPath) {
-      trae.baseUrl(this.baseUrl);
+      opts.baseUrl && (this._baseUrl = opts.baseUrl);
+      trae.baseUrl(this._baseUrl);
       return Promise.resolve();
     }
-
-
-    this._setUpMiddlewares();
 
     return trae.get(opts.configPath)
     .then((res) => {
@@ -184,10 +182,8 @@ class HTTP extends EventEmitter {
 
     trae.use({
       reject: (err) => {
-        this._middlewares.reject = function(err) {
-          this.emit(`${EVENT_PREFIX}:error`, err);
-          return Promise.reject(err);
-        };
+        this.emit(`${EVENT_PREFIX}:error`, err);
+        return Promise.reject(err);
       }
     });
   }
@@ -195,15 +191,15 @@ class HTTP extends EventEmitter {
   _setUpMiddlewares(middlewares) {
     if (middlewares) {
       if (middlewares.config && middlewares.config.length) {
-        this._middlewares.config.forEach(config => trae.use({ config }));
+        middlewares.config.forEach(config => trae.use({ config }));
       }
 
       if (middlewares.fullfill && middlewares.fullfill.length) {
-        this._middlewares.fullfill.forEach(fullfill => trae.use({ fullfill }));
+        middlewares.fullfill.forEach(fullfill => trae.use({ fullfill }));
       }
 
       if (middlewares.reject && middlewares.reject.length) {
-        this._middlewares.reject.forEach(reject => trae.use({ reject }));
+        middlewares.reject.forEach(reject => trae.use({ reject }));
       }
     }
   }
