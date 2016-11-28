@@ -16,7 +16,6 @@ describe('HTTP -> http', () => {
     expect(x2Connector._tokenDuration).toBe(1000 * 60 * 20);
 
     expect(x2Connector._baseUrl).toEqual('http://localhost:8080');
-    expect(x2Connector._middlewares).toEqual({});
 
     expect(x2Connector._inactivityCheckInterval).toBe(null);
     expect(x2Connector._inactivityTimeout).toBe(null);
@@ -25,8 +24,8 @@ describe('HTTP -> http', () => {
   });
 
   describe('init()', () => {
-    it.only('Initilize default attributes', () => {
-      const baseUrl = 'http://localhost:8080';
+    it('Initilize default attributes', () => {
+      const baseUrl = x2Connector._baseUrl;
       const middlewares = {
         config  : [() => {}],
         reject  : [() => {}],
@@ -40,8 +39,8 @@ describe('HTTP -> http', () => {
   });
 
   describe('get()', () => {
-    it('makes a GET request to baseURL + path', () => {
-      fetchMock.mock('http://localhost:8080/foo', {
+    it('makes a GET request to baseURL + path and responds 200 status code', () => {
+      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
         status: 200,
         body  : { foo: 'bar' }
       });
@@ -56,7 +55,7 @@ describe('HTTP -> http', () => {
 
   describe('post()', () => {
     it('makes a POST request to baseURL + path', () => {
-      fetchMock.mock('http://localhost:8080/foo', {
+      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
         status: 200,
         body  : { foo: 'bar' }
       }, {
@@ -73,7 +72,7 @@ describe('HTTP -> http', () => {
 
   describe('put()', () => {
     it('makes a PUT request to baseURL + path', () => {
-      fetchMock.mock('http://localhost:8080/foo', {
+      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
         status: 200,
         body  : { foo: 'bar' }
       }, {
@@ -90,7 +89,7 @@ describe('HTTP -> http', () => {
 
   describe('delete()', () => {
     it('makes a DEL request to baseURL + path', () => {
-      fetchMock.mock('http://localhost:8080/foo', {
+      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
         status: 200,
         body  : { foo: 'bar' }
       }, {
@@ -107,7 +106,7 @@ describe('HTTP -> http', () => {
 
   describe('login()', () => {
     it('makes a post /token to login through X2 API', () => {
-      fetchMock.mock(`${x2Connector._baseUrl}/token`, {
+      fetchMock.mock(`$${x2Connector._baseUrl}/token`, {
         status: 200,
         body  : { token: '1234' }
       }, {
