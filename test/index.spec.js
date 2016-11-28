@@ -16,7 +16,7 @@ describe('HTTP -> http', () => {
     expect(x2Connector.tokenDuration).toBe(1000 * 60 * 20);
 
     expect(x2Connector._baseUrl).toEqual('http://localhost:8080');
-    expect(x2Connector._middlewares).toEqual([]);
+    expect(x2Connector._middlewares).toEqual({});
 
     expect(x2Connector._inactivityCheckInterval).toBe(null);
     expect(x2Connector._inactivityTimeout).toBe(null);
@@ -30,7 +30,6 @@ describe('HTTP -> http', () => {
 
       x2Connector.init({ middlewares: [() => {}], baseUrl });
 
-      expect(x2Connector._middlewares.length).toBe(1);
       expect(x2Connector._baseUrl).toBe(baseUrl);
     });
   });
