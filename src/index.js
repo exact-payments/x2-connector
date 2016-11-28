@@ -4,7 +4,6 @@ const setTimeout       = require('relign/set-timeout');
 const setInterval      = require('relign/set-interval');
 const Storage          = require('@fintechdev/x2-service-storage');
 
-const EVENT_PREFIX = 'x2-connector';
 
 class HTTP extends EventEmitter {
   constructor() {
@@ -132,8 +131,8 @@ class HTTP extends EventEmitter {
 
       this._inactivityTimeout = setTimeout(() => {
         this.delete('/token')
-        .then(res => this.emit(`${EVENT_PREFIX}:session-expired`));
-      }, this._tokenDuration); // 20 minutes
+        .then(res => this.emit('session-expired'));
+      }, this._tokenDuration);
     };
 
     const inactivityCheck = () => {
@@ -182,7 +181,7 @@ class HTTP extends EventEmitter {
 
     trae.use({
       reject: (err) => {
-        this.emit(`${EVENT_PREFIX}:error`, err);
+        this.emit('http-error', err);
         return Promise.reject(err);
       }
     });
