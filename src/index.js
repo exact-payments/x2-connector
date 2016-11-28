@@ -165,7 +165,7 @@ class HTTP extends EventEmitter {
   }
 
   _initMethods() {
-    ['get', 'post', 'put', 'del'].forEach((method) => {
+    ['get', 'post', 'put', 'delete'].forEach((method) => {
       this[method] = (...args) => trae[method](...args)
       .then(response => response.data);
     });

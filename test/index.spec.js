@@ -92,23 +92,11 @@ describe('HTTP -> http', () => {
         method: 'DELETE'
       });
 
-      x2Connector.del('/foo')
+      x2Connector.delete('/foo')
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
       });
-    });
-  });
-
-  describe('_runMiddlewares', () => {
-    it('runs provided middlewares', () => {
-      const config     = { headers: { foo: 'foo' } };
-      const newConfig  = { headers: { foo: 'bar' } };
-      const middleware = (config) => { config.headers.foo = 'bar'; };
-
-      x2Connector._middlewares.push(middleware);
-
-      expect(x2Connector._runMiddlewares(config)).toEqual(newConfig);
     });
   });
 });
