@@ -4,6 +4,8 @@ const setTimeout       = require('relign/set-timeout');
 const setInterval      = require('relign/set-interval');
 const Storage          = require('@fintechdev/x2-service-storage');
 
+const EVENT_PREFIX = 'x2-connector';
+
 class HTTP extends EventEmitter {
   constructor() {
     super();
@@ -13,6 +15,7 @@ class HTTP extends EventEmitter {
 
     this.token           = null;
     this.tokenExpiriesAt = null;
+    this._tokenDuration   = 1000 * 60 * 20; // 20 minutes
 
     this._storage                 = new Storage();
     this._inactivityCheckInterval = null;
@@ -25,19 +28,24 @@ class HTTP extends EventEmitter {
 
     this.isAuthenticated = this.token !== null;
 
-    this._initMethods();
     this._initMiddlewares();
+    this._initMethods();
   }
 
   init(opts = {}) {
+    this._setUpMiddlewares(opts.middlewares);
+
     if (!opts.configPath) {
-      trae.baseUrl(this.baseUrl);
+      opts.baseUrl && (this._baseUrl = opts.baseUrl);
+      trae.baseUrl(this._baseUrl);
       return Promise.resolve();
     }
 
     return trae.get(opts.configPath)
     .then((res) => {
       res.data.env && (this._env = res.data.env);
+      res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
+
       const baseUrl = res.data.api && res.data.api.url;
       trae.baseUrl(baseUrl || this._baseUrl);
     });
@@ -121,10 +129,11 @@ class HTTP extends EventEmitter {
         this._inactivityTimeout.clear();
         this._inactivityTimeout = null;
       }
+
       this._inactivityTimeout = setTimeout(() => {
         this.delete('/token')
-        .then(res => this.emit('session-expired'));
-      }, 1000 * 60 * 20); // 20 minutes
+        .then(res => this.emit(`${EVENT_PREFIX}:session-expired`));
+      }, this._tokenDuration); // 20 minutes
     };
 
     const inactivityCheck = () => {
@@ -155,7 +164,7 @@ class HTTP extends EventEmitter {
   }
 
   _initMethods() {
-    ['get', 'post', 'put', 'del'].forEach((method) => {
+    ['get', 'post', 'put', 'delete'].forEach((method) => {
       this[method] = (...args) => trae[method](...args)
       .then(response => response.data);
     });
@@ -170,6 +179,29 @@ class HTTP extends EventEmitter {
         return config;
       }
     });
+
+    trae.use({
+      reject: (err) => {
+        this.emit(`${EVENT_PREFIX}:error`, err);
+        return Promise.reject(err);
+      }
+    });
+  }
+
+  _setUpMiddlewares(middlewares) {
+    if (middlewares) {
+      if (middlewares.config && middlewares.config.length) {
+        middlewares.config.forEach(config => trae.use({ config }));
+      }
+
+      if (middlewares.fullfill && middlewares.fullfill.length) {
+        middlewares.fullfill.forEach(fullfill => trae.use({ fullfill }));
+      }
+
+      if (middlewares.reject && middlewares.reject.length) {
+        middlewares.reject.forEach(reject => trae.use({ reject }));
+      }
+    }
   }
 }
 
