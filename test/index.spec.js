@@ -1,36 +1,37 @@
 /* global describe it expect */
 
-const fetchMock = require('fetch-mock');
-const http      = require('../src');
+const fetchMock   = require('fetch-mock');
+const x2Connector = require('../src');
 
 describe('HTTP -> http', () => {
 
   it('extends from EventEmitter class so it should have the "emit" and "on" methods available', () => {
-    expect(http.emit).toBeTruthy();
-    expect(http.on).toBeTruthy();
+    expect(x2Connector.emit).toBeTruthy();
+    expect(x2Connector.on).toBeTruthy();
   });
 
   it('Initialize attributes', () => {
-    expect(http.token).toBe(null);
-    expect(http.tokenExpiriesAt).toBe(null);
+    expect(x2Connector.token).toBe(null);
+    expect(x2Connector.tokenExpiriesAt).toBe(null);
+    expect(x2Connector.tokenDuration).toBe(1000 * 60 * 20);
 
-    expect(http._baseUrl).toEqual('');
-    expect(http._middlewares).toEqual([]);
+    expect(x2Connector._baseUrl).toEqual('http://localhost:8080');
+    expect(x2Connector._middlewares).toEqual([]);
 
-    expect(http._inactivityCheckInterval).toBe(null);
-    expect(http._inactivityTimeout).toBe(null);
-    expect(http._pageActivityDetected).toBeFalsy();
-    expect(http._watchForPageActivity).toBeFalsy();
+    expect(x2Connector._inactivityCheckInterval).toBe(null);
+    expect(x2Connector._inactivityTimeout).toBe(null);
+    expect(x2Connector._pageActivityDetected).toBeFalsy();
+    expect(x2Connector._watchForPageActivity).toBeFalsy();
   });
 
   describe('init', () => {
     it('Initilize default attributes', () => {
       const baseUrl = 'http://localhost:8080';
 
-      http.init({ middlewares: [() => {}], baseUrl });
+      x2Connector.init({ middlewares: [() => {}], baseUrl });
 
-      expect(http._middlewares.length).toBe(1);
-      expect(http._baseUrl).toBe(baseUrl);
+      expect(x2Connector._middlewares.length).toBe(1);
+      expect(x2Connector._baseUrl).toBe(baseUrl);
     });
   });
 
@@ -41,7 +42,7 @@ describe('HTTP -> http', () => {
         body  : { foo: 'bar' }
       });
 
-      http.get('/foo')
+      x2Connector.get('/foo')
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
@@ -58,7 +59,7 @@ describe('HTTP -> http', () => {
         method: 'POST'
       });
 
-      http.post('/foo')
+      x2Connector.post('/foo')
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
@@ -75,7 +76,7 @@ describe('HTTP -> http', () => {
         method: 'PUT'
       });
 
-      http.put('/foo')
+      x2Connector.put('/foo')
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
@@ -92,7 +93,7 @@ describe('HTTP -> http', () => {
         method: 'DELETE'
       });
 
-      http.del('/foo')
+      x2Connector.del('/foo')
       .then((res) => {
         expect(res).toBe({ foo: 'bar' });
         fetchMock.restore();
@@ -106,9 +107,9 @@ describe('HTTP -> http', () => {
       const newConfig  = { headers: { foo: 'bar' } };
       const middleware = (config) => { config.headers.foo = 'bar'; };
 
-      http._middlewares.push(middleware);
+      x2Connector._middlewares.push(middleware);
 
-      expect(http._runMiddlewares(config)).toEqual(newConfig);
+      expect(x2Connector._runMiddlewares(config)).toEqual(newConfig);
     });
   });
 });
