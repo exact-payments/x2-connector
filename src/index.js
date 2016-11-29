@@ -40,7 +40,7 @@ class HTTP extends EventEmitter {
       return Promise.resolve();
     }
 
-    return trae.get(opts.configPath)
+    return trae.get(opts.configPath, { bodyType: 'json' })
     .then((res) => {
       res.data.env && (this._env = res.data.env);
       res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
