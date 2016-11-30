@@ -14,7 +14,7 @@ class HTTP extends EventEmitter {
 
     this.token           = null;
     this.tokenExpiriesAt = null;
-    this._tokenDuration   = 1000 * 60 * 20; // 20 minutes
+    this._tokenDuration  = 1000 * 60 * 20; // 20 minutes
 
     this._storage                 = new Storage();
     this._inactivityCheckInterval = null;
@@ -189,16 +189,20 @@ class HTTP extends EventEmitter {
 
   _setUpMiddlewares(middlewares) {
     if (middlewares) {
-      if (middlewares.config && middlewares.config.length) {
-        middlewares.config.forEach(config => trae.use({ config }));
+      if (middlewares.before && middlewares.before.length) {
+        middlewares.before.forEach(before => trae.use({ before }));
       }
 
-      if (middlewares.fullfill && middlewares.fullfill.length) {
-        middlewares.fullfill.forEach(fullfill => trae.use({ fullfill }));
+      if (middlewares.success && middlewares.success.length) {
+        middlewares.success.forEach(success => trae.use({ success }));
       }
 
-      if (middlewares.reject && middlewares.reject.length) {
-        middlewares.reject.forEach(reject => trae.use({ reject }));
+      if (middlewares.error && middlewares.error.length) {
+        middlewares.error.forEach(error => trae.use({ error }));
+      }
+
+      if (middlewares.after && middlewares.after.length) {
+        middlewares.after.forEach(after => trae.use({ after }));
       }
     }
   }
