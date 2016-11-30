@@ -1,6 +1,6 @@
 {
-  "name": "@fintechdev/http-client",
-  "version": "0.3.3",
+  "name": "@fintechdev/x2-connector",
+  "version": "0.3.4",
   "description": "http connector to communicate with x2 gateway",
   "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "relign": "^0.5.0",
-    "trae": "0.0.8",
+    "trae": "0.0.10",
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
