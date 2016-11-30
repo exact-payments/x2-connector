@@ -187,6 +187,13 @@ class HTTP extends EventEmitter {
     });
 
     trae.use({
+      success: (res) => {
+        this.emit('success', res);
+        return Promise.resolve(res);
+      }
+    });
+
+    trae.use({
       after: (res) => {
         this.emit('ends', res);
         return Promise.resolve(res);
