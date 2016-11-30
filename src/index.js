@@ -171,18 +171,25 @@ class HTTP extends EventEmitter {
 
   _initMiddlewares() {
     trae.use({
-      config: (config) => {
+      before: (before) => {
         if (this.isAuthenticated) {
-          config.headers.authorization = this.token;
+          before.headers.authorization = this.token;
         }
-        return config;
+        return before;
       }
     });
 
     trae.use({
-      reject: (err) => {
-        this.emit('http-error', err);
+      error: (err) => {
+        this.emit('error', err);
         return Promise.reject(err);
+      }
+    });
+
+    trae.use({
+      after: (res) => {
+        this.emit('ends', res);
+        return Promise.resolve(res);
       }
     });
   }
