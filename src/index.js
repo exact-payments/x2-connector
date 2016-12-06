@@ -172,9 +172,12 @@ class HTTP extends EventEmitter {
   _initMiddlewares() {
     trae.use({
       before: (before) => {
+        this.emit('before', before);
+
         if (this.isAuthenticated) {
           before.headers.authorization = this.token;
         }
+
         return before;
       }
     });
@@ -195,7 +198,7 @@ class HTTP extends EventEmitter {
 
     trae.use({
       after: (res) => {
-        this.emit('ends', res);
+        this.emit('after', res);
         return Promise.resolve(res);
       }
     });
