@@ -1,9 +1,13 @@
 /* global describe it expect */
 
-const fetchMock   = require('fetch-mock');
-const x2Connector = require('../src');
+const fetchMock = require('fetch-mock');
+
+const x2Connector = require('../../src');
+const trae        = require('trae');
 
 describe('HTTP -> http', () => {
+
+  const baseUrl = 'http://localhost:8080';
 
   it('extends from EventEmitter class so it should have the "emit" and "on" methods available', () => {
     expect(x2Connector.emit).toBeTruthy();
@@ -11,11 +15,9 @@ describe('HTTP -> http', () => {
   });
 
   it('Initialize attributes', () => {
-    expect(x2Connector.token).toBe(null);
+    expect(x2Connector.token).toEqual(null);
     expect(x2Connector.tokenExpiriesAt).toBe(null);
     expect(x2Connector._tokenDuration).toBe(1000 * 60 * 20);
-
-    expect(x2Connector._baseUrl).toEqual('http://localhost:8080');
 
     expect(x2Connector._inactivityCheckInterval).toBe(null);
     expect(x2Connector._inactivityTimeout).toBe(null);
@@ -25,29 +27,26 @@ describe('HTTP -> http', () => {
 
   describe('init()', () => {
     it('Initilize default attributes', () => {
-      const baseUrl = x2Connector._baseUrl;
-      const middlewares = {
-        config  : [() => {}],
-        reject  : [() => {}],
-        fullfill: [() => {}]
-      };
+      const httpConfig = { baseUrl };
 
-      x2Connector.init({ middlewares, baseUrl });
-
-      expect(x2Connector._baseUrl).toBe(baseUrl);
+      return x2Connector.init({ httpConfig })
+      .then(() => {
+        expect(trae.baseUrl()).toBe(baseUrl);
+      });
     });
   });
 
   describe('get()', () => {
     it('makes a GET request to baseURL + path and responds 200 status code', () => {
-      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
-        status: 200,
-        body  : { foo: 'bar' }
+      fetchMock.mock(`${baseUrl}/foo`, {
+        status : 200,
+        body   : { foo: 'bar' },
+        headers: { 'Content-Type': 'application/json' }
       });
 
-      x2Connector.get('/foo')
+      return x2Connector.get('/foo')
       .then((res) => {
-        expect(res).toBe({ foo: 'bar' });
+        expect(res).toEqual({ foo: 'bar' });
         fetchMock.restore();
       });
     });
@@ -55,16 +54,17 @@ describe('HTTP -> http', () => {
 
   describe('post()', () => {
     it('makes a POST request to baseURL + path', () => {
-      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
-        status: 200,
-        body  : { foo: 'bar' }
+      fetchMock.mock(`${baseUrl}/foo`, {
+        status : 200,
+        body   : { foo: 'bar' },
+        headers: { 'Content-Type': 'application/json' }
       }, {
         method: 'POST'
       });
 
-      x2Connector.post('/foo')
+      return x2Connector.post('/foo')
       .then((res) => {
-        expect(res).toBe({ foo: 'bar' });
+        expect(res).toEqual({ foo: 'bar' });
         fetchMock.restore();
       });
     });
@@ -72,16 +72,17 @@ describe('HTTP -> http', () => {
 
   describe('put()', () => {
     it('makes a PUT request to baseURL + path', () => {
-      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
-        status: 200,
-        body  : { foo: 'bar' }
+      fetchMock.mock(`${baseUrl}/foo`, {
+        status : 200,
+        body   : { foo: 'bar' },
+        headers: { 'Content-Type': 'application/json' }
       }, {
         method: 'PUT'
       });
 
-      x2Connector.put('/foo')
+      return x2Connector.put('/foo')
       .then((res) => {
-        expect(res).toBe({ foo: 'bar' });
+        expect(res).toEqual({ foo: 'bar' });
         fetchMock.restore();
       });
     });
@@ -89,33 +90,35 @@ describe('HTTP -> http', () => {
 
   describe('delete()', () => {
     it('makes a DEL request to baseURL + path', () => {
-      fetchMock.mock(`${x2Connector._baseUrl}/foo`, {
+      fetchMock.mock(`${baseUrl}/foo`, {
         status: 200,
-        body  : { foo: 'bar' }
+        body   : { foo: 'bar' },
+        headers: { 'Content-Type': 'application/json' }
       }, {
         method: 'DELETE'
       });
 
-      x2Connector.delete('/foo')
+      return x2Connector.delete('/foo')
       .then((res) => {
-        expect(res).toBe({ foo: 'bar' });
+        expect(res).toEqual({ foo: 'bar' });
         fetchMock.restore();
       });
     });
   });
 
   describe('login()', () => {
-    it('makes a post /token to login through X2 API', () => {
-      fetchMock.mock(`$${x2Connector._baseUrl}/token`, {
-        status: 200,
-        body  : { token: '1234' }
+    it('makes a post to /token through X2 API to login', () => {
+      fetchMock.mock(`${baseUrl}/token`, {
+        status : 200,
+        body   : { token: '1234' },
+        headers: { 'Content-Type': 'application/json' }
       }, {
         method: 'POST'
       });
 
-      x2Connector.login('user', 'password')
+      return x2Connector.login('user', 'password')
       .then((res) => {
-        expect(res).toBe({ token: '1234' });
+        expect(x2Connector.token).toBe('1234');
       });
     });
   });

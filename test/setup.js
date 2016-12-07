@@ -1,10 +1,25 @@
-const jsdom        = require('jsdom');
-const LocalStorage = require('node-localstorage').LocalStorage;
+const storageMock = () => {
+  const storage = {};
 
-global.localStorage   = new LocalStorage('test/localStorageTemp');
-global.sessionStorage = new LocalStorage('test/sessionStorageTemp');
+  return {
+    setItem(key, value) {
+      storage[key] = value || '';
+    },
+    getItem(key) {
+      return storage[key] || null;
+    },
+    removeItem(key) {
+      delete storage[key];
+    },
+    get length() {
+      return Object.keys(storage).length;
+    },
+    key(i) {
+      const keys = Object.keys(storage);
+      return keys[i] || null;
+    }
+  };
+};
 
-
-global.window = jsdom.jsdom('').defaultView;
-global.window.localStorage   = global.localStorage;
-global.window.sessionStorage = global.sessionStorage;
+Object.defineProperty(window, 'localStorage',   { value: storageMock() });
+Object.defineProperty(window, 'sessionStorage', { value: storageMock() });
