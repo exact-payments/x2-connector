@@ -9,8 +9,7 @@ class HTTP extends EventEmitter {
   constructor() {
     super();
 
-    this._env     = 'DEV';
-    this._baseUrl = 'http://localhost:8080';
+    this._env = 'DEV';
 
     this.token           = null;
     this.tokenExpiriesAt = null;
@@ -35,18 +34,26 @@ class HTTP extends EventEmitter {
     this._setUpMiddlewares(opts.middlewares);
 
     if (!opts.configPath) {
-      opts.baseUrl && (this._baseUrl = opts.baseUrl);
-      trae.baseUrl(this._baseUrl);
+      opts.httpConfig         || (opts.httpConfig = {});
+      opts.httpConfig.baseUrl || (opts.httpConfig.baseUrl = 'http://localhost:8080');
+      trae.defaults(opts.httpConfig);
       return Promise.resolve();
     }
 
     return trae.get(opts.configPath, { bodyType: 'json' })
     .then((res) => {
-      res.data.env && (this._env = res.data.env);
+      res.data.env           && (this._env = res.data.env);
       res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
 
-      const baseUrl = res.data.api && res.data.api.url;
-      trae.baseUrl(baseUrl || this._baseUrl);
+      const getBaseUrl = () => {
+        const apiUrl = res.data.api && res.data.api.url;
+        return apiUrl || 'http://localhost:8080';
+      };
+
+      res.data.httpConfig         || (res.data.httpConfig = {});
+      res.data.httpConfig.baseUrl || (res.data.httpConfig.baseUrl = getBaseUrl());
+
+      trae.defaults(res.data.httpConfig);
     });
   }
 
@@ -113,8 +120,6 @@ class HTTP extends EventEmitter {
       }
 
       const renewTokenIn = (new Date(this.tokenExpiriesAt)).getTime() - Date.now();
-
-      console.log(renewTokenIn);
 
       this._tokenRenewTimeout = setTimeout(() => trae.put('/token')
       .then((res) => {
@@ -205,22 +210,21 @@ class HTTP extends EventEmitter {
   }
 
   _setUpMiddlewares(middlewares) {
-    if (middlewares) {
-      if (middlewares.before && middlewares.before.length) {
-        middlewares.before.forEach(before => trae.use({ before }));
-      }
+    if (!middlewares) { return; }
+    if (middlewares.before && middlewares.before.length) {
+      middlewares.before.forEach(before => trae.use({ before }));
+    }
 
-      if (middlewares.success && middlewares.success.length) {
-        middlewares.success.forEach(success => trae.use({ success }));
-      }
+    if (middlewares.success && middlewares.success.length) {
+      middlewares.success.forEach(success => trae.use({ success }));
+    }
 
-      if (middlewares.error && middlewares.error.length) {
-        middlewares.error.forEach(error => trae.use({ error }));
-      }
+    if (middlewares.error && middlewares.error.length) {
+      middlewares.error.forEach(error => trae.use({ error }));
+    }
 
-      if (middlewares.after && middlewares.after.length) {
-        middlewares.after.forEach(after => trae.use({ after }));
-      }
+    if (middlewares.after && middlewares.after.length) {
+      middlewares.after.forEach(after => trae.use({ after }));
     }
   }
 }
