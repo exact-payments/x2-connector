@@ -22,6 +22,8 @@ class HTTP extends EventEmitter {
     this._pageActivityDetected    = false;
     this._watchForPageActivity    = false;
 
+    this.session = {};
+
     this._restoreExistingSession();
 
     this.isAuthenticated = this.token !== null;
@@ -78,6 +80,16 @@ class HTTP extends EventEmitter {
       if (this._watchForPageActivity) {
         this._startRenewTokenLoop();
       }
+    });
+  }
+
+  getSession() {
+    return trae.get('/user/current')
+    .then((res) => {
+      this.session = res.data;
+      this._storage.set('session', res.data);
+
+      return Promise.resolve(res);
     });
   }
 
