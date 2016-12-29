@@ -1,9 +1,8 @@
 /* global describe it expect */
 
-const fetchMock = require('fetch-mock');
-
-const x2Connector = require('../../src');
-const trae        = require('trae');
+import fetchMock   from 'fetch-mock';
+import trae        from 'trae';
+import x2Connector from '../../src';
 
 describe('HTTP -> http', () => {
 

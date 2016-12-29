@@ -1,8 +1,8 @@
-const { EventEmitter } = require('events');
-const trae             = require('trae');
-const setTimeout       = require('relign/set-timeout');
-const setInterval      = require('relign/set-interval');
-const Storage          = require('@fintechdev/x2-service-storage');
+import { EventEmitter } from 'events';
+import trae             from 'trae';
+import setTimeout       from 'relign/set-timeout';
+import setInterval      from 'relign/set-interval';
+import Storage          from '@fintechdev/x2-service-storage';
 
 
 class HTTP extends EventEmitter {
@@ -42,21 +42,22 @@ class HTTP extends EventEmitter {
       return Promise.resolve();
     }
 
-    return trae.get(opts.configPath, { bodyType: 'json' })
-    .then((res) => {
-      res.data.env           && (this._env = res.data.env);
-      res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
+    return trae
+      .get(opts.configPath)
+      .then((res) => {
+        res.data.env           && (this._env = res.data.env);
+        res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
 
-      const getBaseUrl = () => {
-        const apiUrl = res.data.api && res.data.api.url;
-        return apiUrl || 'http://localhost:8080';
-      };
+        const getBaseUrl = () => {
+          const apiUrl = res.data.api && res.data.api.url;
+          return apiUrl || 'http://localhost:8080';
+        };
 
-      res.data.httpConfig         || (res.data.httpConfig = {});
-      res.data.httpConfig.baseUrl || (res.data.httpConfig.baseUrl = getBaseUrl());
+        res.data.httpConfig         || (res.data.httpConfig = {});
+        res.data.httpConfig.baseUrl || (res.data.httpConfig.baseUrl = getBaseUrl());
 
-      trae.defaults(res.data.httpConfig);
-    });
+        trae.defaults(res.data.httpConfig);
+      });
   }
 
   getEnvironment() {
@@ -68,29 +69,31 @@ class HTTP extends EventEmitter {
   }
 
   login(email, password) {
-    return trae.post('/token', { email, password })
-    .then((res) => {
-      this.isAuthenticated = true;
-      this.token           = res.data.token;
-      this.tokenExpiriesAt = res.data.expiresAt;
+    return trae
+      .post('/token', { email, password })
+      .then((res) => {
+        this.isAuthenticated = true;
+        this.token           = res.data.token;
+        this.tokenExpiriesAt = res.data.expiresAt;
 
-      this._storage.set('token', res.data.token);
-      this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+        this._storage.set('token', res.data.token);
+        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
 
-      if (this._watchForPageActivity) {
-        this._startRenewTokenLoop();
-      }
-    });
+        if (this._watchForPageActivity) {
+          this._startRenewTokenLoop();
+        }
+      });
   }
 
   getSession() {
-    return trae.get('/user/current')
-    .then((res) => {
-      this.session = res.data;
-      this._storage.set('session', res.data);
+    return trae
+      .get('/user/current')
+      .then((res) => {
+        this.session = res.data;
+        this._storage.set('session', res.data);
 
-      return Promise.resolve(res);
-    });
+        return Promise.resolve(res);
+      });
   }
 
   logout() {
@@ -104,13 +107,15 @@ class HTTP extends EventEmitter {
   }
 
   resetPasswordRequest(email) {
-    return trae.post(`/user/send-password-reset/${email}`)
-    .then(response => response.data);
+    return trae
+      .post(`/user/send-password-reset/${email}`)
+      .then(response => response.data);
   }
 
   resetPassword(newPassword, passwordResetToken) {
-    return trae.post(`/user/reset-password/${passwordResetToken}`, { newPassword })
-    .then(response => response.data);
+    return trae
+      .post(`/user/reset-password/${passwordResetToken}`, { newPassword })
+      .then(response => response.data);
   }
 
   watchForInactivity() {
@@ -133,11 +138,12 @@ class HTTP extends EventEmitter {
 
       const renewTokenIn = (new Date(this.tokenExpiriesAt)).getTime() - Date.now();
 
-      this._tokenRenewTimeout = setTimeout(() => trae.put('/token')
-      .then((res) => {
-        this.tokenExpiriesAt = res.data.expiresAt;
-        this._storage.set('tokenExpiriesAt', res.data.expiresAt);
-      }), renewTokenIn);
+      this._tokenRenewTimeout = setTimeout(() => trae
+        .put('/token')
+        .then((res) => {
+          this.tokenExpiriesAt = res.data.expiresAt;
+          this._storage.set('tokenExpiriesAt', res.data.expiresAt);
+        }), renewTokenIn);
     };
 
     const startInactivityTimeout = () => {
@@ -147,8 +153,9 @@ class HTTP extends EventEmitter {
       }
 
       this._inactivityTimeout = setTimeout(() => {
-        this.delete('/token')
-        .then(res => this.emit('session-expired'));
+        this
+          .delete('/token')
+          .then(res => this.emit('session-expired'));
       }, this._tokenDuration);
     };
 
@@ -241,5 +248,6 @@ class HTTP extends EventEmitter {
   }
 }
 
-exports = module.exports = new HTTP();
-exports.HTTP = HTTP;
+const http = new HTTP();
+http.HTTP  = HTTP;
+export default http;
