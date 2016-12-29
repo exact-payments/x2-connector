@@ -1,4 +1,4 @@
-import uglify      from 'rollup-plugin-uglify'; // eslint-disable-line
+import uglify      from 'rollup-plugin-uglify';
 import babel       from 'rollup-plugin-babel';
 import replace     from 'rollup-plugin-replace';
 import eslint      from 'rollup-plugin-eslint';
@@ -30,29 +30,29 @@ export default {
   sourceMap : !isProd && 'inline',
   context   : 'window',
   banner,
-  plugins: [
+  plugins   : [
     builtins(),
     eslint(),
     resolve({
       jsnext : true,
       main   : true,
-      browser: true
+      browser: true,
     }),
     commonjs(),
     babel({
       babelrc: false, // jest makes use of .babelrc
-      presets: ['es2015-rollup']
+      presets: ['es2015-rollup'],
     }),
     replace({
       exclude               : 'node_modules/**',
       'process.env.NODE_ENV': JSON.stringify(env),
-      NODE_ENV              : JSON.stringify(env)
+      NODE_ENV              : JSON.stringify(env),
     }),
     conditional({
       condition: isProd,
-      plugin   : uglify()
+      plugin   : uglify(),
     }),
     visualizer({ filename: './coverage/bundle-statistics.html' }),
-    filesize()
-  ]
+    filesize(),
+  ],
 };

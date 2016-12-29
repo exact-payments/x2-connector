@@ -155,7 +155,7 @@ class HTTP extends EventEmitter {
       this._inactivityTimeout = setTimeout(() => {
         this
           .delete('/token')
-          .then(res => this.emit('session-expired'));
+          .then(() => this.emit('session-expired'));
       }, this._tokenDuration);
     };
 
@@ -203,46 +203,46 @@ class HTTP extends EventEmitter {
         }
 
         return before;
-      }
+      },
     });
 
     trae.use({
       error: (err) => {
         this.emit('error', err);
         return Promise.reject(err);
-      }
+      },
     });
 
     trae.use({
       success: (res) => {
         this.emit('success', res);
         return Promise.resolve(res);
-      }
+      },
     });
 
     trae.use({
       after: (res) => {
         this.emit('after', res);
         return Promise.resolve(res);
-      }
+      },
     });
   }
 
   _setUpMiddlewares(middlewares) {
     if (!middlewares) { return; }
-    if (middlewares.before && middlewares.before.length) {
+    if (middlewares.before && middlewares.before.length > 0) {
       middlewares.before.forEach(before => trae.use({ before }));
     }
 
-    if (middlewares.success && middlewares.success.length) {
+    if (middlewares.success && middlewares.success.length > 0) {
       middlewares.success.forEach(success => trae.use({ success }));
     }
 
-    if (middlewares.error && middlewares.error.length) {
+    if (middlewares.error && middlewares.error.length > 0) {
       middlewares.error.forEach(error => trae.use({ error }));
     }
 
-    if (middlewares.after && middlewares.after.length) {
+    if (middlewares.after && middlewares.after.length > 0) {
       middlewares.after.forEach(after => trae.use({ after }));
     }
   }
