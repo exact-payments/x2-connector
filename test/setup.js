@@ -17,7 +17,7 @@ const storageMock = () => {
     key(i) {
       const keys = Object.keys(storage);
       return keys[i] || null;
-    }
+    },
   };
 };
 
