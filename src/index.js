@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
-import trae             from 'trae';
-import setTimeout       from 'relign/set-timeout';
-import setInterval      from 'relign/set-interval';
-import Storage          from '@fintechdev/x2-service-storage';
+const EventEmitter = require('events').EventEmitter;
+const trae         = require('trae');
+const setTimeout   = require('relign/set-timeout');
+const setInterval  = require('relign/set-interval');
+const Storage      = require('@fintechdev/x2-service-storage');
 
 
 class HTTP extends EventEmitter {
@@ -43,7 +43,7 @@ class HTTP extends EventEmitter {
     }
 
     return trae
-      .get(opts.configPath)
+      .get(opts.configPath, { bodyType: 'json' })
       .then((res) => {
         res.data.env           && (this._env = res.data.env);
         res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
@@ -250,4 +250,4 @@ class HTTP extends EventEmitter {
 
 const http = new HTTP();
 http.HTTP  = HTTP;
-export default http;
+module.exports = http;

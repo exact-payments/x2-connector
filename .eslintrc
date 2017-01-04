@@ -2,7 +2,6 @@
   "extends": "x2",
   "globals": {
     "window": true,
-    "fetch": true,
     "Promise": true
   },
   "parserOptions": {
