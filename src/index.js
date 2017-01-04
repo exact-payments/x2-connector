@@ -33,8 +33,6 @@ class HTTP extends EventEmitter {
   }
 
   init(opts = {}) {
-    this._setUpMiddlewares(opts.middlewares);
-
     if (!opts.configPath) {
       opts.httpConfig         || (opts.httpConfig = {});
       opts.httpConfig.baseUrl || (opts.httpConfig.baseUrl = 'http://localhost:8080');
@@ -194,57 +192,25 @@ class HTTP extends EventEmitter {
   }
 
   _initMiddlewares() {
-    trae.use({
-      before: (before) => {
-        this.emit('before', before);
-
-        if (this.isAuthenticated) {
-          before.headers.authorization = this.token;
-        }
-
-        return before;
-      },
+    trae.before((config) => {
+      this.emit('before', config);
+      if (this.isAuthenticated) {
+        config.headers.authorization = this.token;
+      }
+      return config;
     });
 
-    trae.use({
-      error: (err) => {
-        this.emit('error', err);
-        return Promise.reject(err);
-      },
+    trae.after((res) => {
+      this.emit('success', res);
+      return Promise.resolve(res);
+    }, (err) => {
+      this.emit('error', err);
+      return Promise.reject(err);
     });
 
-    trae.use({
-      success: (res) => {
-        this.emit('success', res);
-        return Promise.resolve(res);
-      },
+    trae.finally(() => {
+      this.emit('finally');
     });
-
-    trae.use({
-      after: (res) => {
-        this.emit('after', res);
-        return Promise.resolve(res);
-      },
-    });
-  }
-
-  _setUpMiddlewares(middlewares) {
-    if (!middlewares) { return; }
-    if (middlewares.before && middlewares.before.length > 0) {
-      middlewares.before.forEach(before => trae.use({ before }));
-    }
-
-    if (middlewares.success && middlewares.success.length > 0) {
-      middlewares.success.forEach(success => trae.use({ success }));
-    }
-
-    if (middlewares.error && middlewares.error.length > 0) {
-      middlewares.error.forEach(error => trae.use({ error }));
-    }
-
-    if (middlewares.after && middlewares.after.length > 0) {
-      middlewares.after.forEach(after => trae.use({ after }));
-    }
   }
 }
 
