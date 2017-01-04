@@ -1,6 +1,6 @@
 {
   "name": "@fintechdev/x2-connector",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "HTTP Connector to communicate with x2 services",
   "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@fintechdev/x2-service-storage": "0.0.2",
     "relign": "^0.7.1",
-    "trae": "0.0.10"
+    "trae": "^1.0.0"
   },
   "devDependencies": {
     "babel-jest": "^18.0.0",
