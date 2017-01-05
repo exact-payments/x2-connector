@@ -26,11 +26,27 @@ describe('HTTP -> http', () => {
   });
 
   describe('init()', () => {
-    it('Initilize default attributes', () => {
+    it('Initialize default attributes', () => {
       const httpConfig = { baseUrl };
 
       return x2Connector
         .init({ httpConfig })
+        .then(() => {
+          expect(trae.baseUrl()).toBe(baseUrl);
+        });
+    });
+
+    it('Initialize attributes with config path', () => {
+      const configPath = `${baseUrl}/config`;
+
+      fetchMock.mock(configPath, {
+        status : 200,
+        body   : { env: 'DEV' },
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      return x2Connector
+        .init({ configPath })
         .then(() => {
           expect(trae.baseUrl()).toBe(baseUrl);
         });
