@@ -107,13 +107,13 @@ class HTTP extends EventEmitter {
   resetPasswordRequest(email) {
     return trae
       .post(`/user/send-password-reset/${email}`)
-      .then(res => res.data);
+      .then(response => response.data);
   }
 
   resetPassword(newPassword, passwordResetToken) {
     return trae
       .post(`/user/reset-password/${passwordResetToken}`, { newPassword })
-      .then(res => res.data);
+      .then(response => response.data);
   }
 
   watchForInactivity() {
@@ -187,7 +187,7 @@ class HTTP extends EventEmitter {
   _initMethods() {
     ['get', 'post', 'put', 'delete'].forEach((method) => {
       this[method] = (...args) => trae[method](...args)
-      .then(res => res);
+      .then(response => response.data);
     });
   }
 

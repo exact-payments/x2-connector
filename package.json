@@ -20,8 +20,7 @@
   },
   "devDependencies": {
     "babel-jest": "^18.0.0",
-    "babel-preset-es2015": "^6.18.0",
-    "eslint": "^3.12.2",
+    "eslint": "^3.9.1",
     "eslint-config-x2": "^2.0.0",
     "fetch-mock": "^5.5.0",
     "jest": "^16.0.2",
