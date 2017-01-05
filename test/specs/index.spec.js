@@ -140,6 +140,27 @@ describe('HTTP -> http', () => {
     ));
   });
 
+  describe('getSession()', () => {
+    it('makes a get to /user/current through X2 API and get session data', () => {
+      const body = { _id: 1234, account: 1234 };
+
+      fetchMock.mock(`${baseUrl}/user/current`, {
+        body,
+        status : 200,
+        headers: { 'Content-Type': 'application/json' },
+      }, {
+        method: 'GET',
+      });
+
+      return x2Connector
+        .getSession()
+        .then((res) => {
+          expect(res.data._id).toBe(body._id);
+          expect(res.data.account).toBe(body.account);
+        });
+    });
+  });
+
   describe('getEnvironment()', () => {
     it('returns the current environment', () => {
       expect(x2Connector.getEnvironment()).toBe('DEV');
