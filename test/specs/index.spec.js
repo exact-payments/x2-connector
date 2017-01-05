@@ -14,7 +14,7 @@ describe('HTTP -> http', () => {
     expect(x2Connector.on).toBeTruthy();
   });
 
-  it('initialize attributes', () => {
+  it('Initialize attributes', () => {
     expect(x2Connector.token).toEqual(null);
     expect(x2Connector.tokenExpiriesAt).toBe(null);
     expect(x2Connector._tokenDuration).toBe(1000 * 60 * 20);
@@ -26,27 +26,11 @@ describe('HTTP -> http', () => {
   });
 
   describe('init()', () => {
-    it('initialize default attributes', () => {
+    it('Initilize default attributes', () => {
       const httpConfig = { baseUrl };
 
       return x2Connector
         .init({ httpConfig })
-        .then(() => {
-          expect(trae.baseUrl()).toBe(baseUrl);
-        });
-    });
-
-    it('initialize attributes with config path', () => {
-      const configPath = `${baseUrl}/config`;
-
-      fetchMock.mock(configPath, {
-        status : 200,
-        body   : { env: 'DEV' },
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      return x2Connector
-        .init({ configPath })
         .then(() => {
           expect(trae.baseUrl()).toBe(baseUrl);
         });
@@ -64,7 +48,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .get('/foo')
         .then((res) => {
-          expect(res.data).toEqual({ foo: 'bar' });
+          expect(res).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -83,7 +67,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .post('/foo')
         .then((res) => {
-          expect(res.data).toEqual({ foo: 'bar' });
+          expect(res).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -102,7 +86,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .put('/foo')
         .then((res) => {
-          expect(res.data).toEqual({ foo: 'bar' });
+          expect(res).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -121,7 +105,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .delete('/foo')
         .then((res) => {
-          expect(res.data).toEqual({ foo: 'bar' });
+          expect(res).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -145,45 +129,6 @@ describe('HTTP -> http', () => {
     });
   });
 
-  describe('logout()', () => {
-    it('logout user and clear session data', () => (
-      x2Connector.logout()
-        .then(() => {
-          expect(x2Connector.isAuthenticated).toBe(false);
-          expect(x2Connector.token).toBe(undefined);
-          expect(x2Connector._storage.get('token')).toBe(null);
-        })
-    ));
-  });
-
-  describe('getSession()', () => {
-    it('makes a get to /user/current through X2 API and get session data', () => {
-      const body = { _id: 1234, account: 1234 };
-
-      fetchMock.mock(`${baseUrl}/user/current`, {
-        body,
-        status : 200,
-        headers: { 'Content-Type': 'application/json' },
-      }, {
-        method: 'GET',
-      });
-
-      return x2Connector
-        .getSession()
-        .then((res) => {
-          expect(res.data._id).toBe(body._id);
-          expect(res.data.account).toBe(body.account);
-        });
-    });
-  });
-
-  describe('watchForInactivity()', () => {
-    it('set up event listeners to start watching user inactivity', () => {
-      x2Connector.watchForInactivity();
-      expect(x2Connector._watchForPageActivity).toBe(true);
-    });
-  });
-
   describe('getEnvironment()', () => {
     it('returns the current environment', () => {
       expect(x2Connector.getEnvironment()).toBe('DEV');
@@ -193,27 +138,6 @@ describe('HTTP -> http', () => {
   describe('isProd()', () => {
     it('returns false if current environment is not PROD', () => {
       expect(x2Connector.isProd()).toBe(false);
-    });
-  });
-
-  describe('_startRenewTokenLoop()', () => {
-    it('set up timeouts intervals for token renew', () => {
-      x2Connector._startRenewTokenLoop();
-      expect(typeof x2Connector._tokenRenewTimeout).toBe('object');
-      expect(x2Connector._inactivityTimeout).toBe(null);
-      expect(x2Connector._pageActivityDetected).toBe(false);
-      x2Connector._stopRenewTokenLoop();
-    });
-  });
-
-  describe('_stopRenewTokenLoop()', () => {
-    it('stop timeouts intervals for token renew', () => {
-      x2Connector._startRenewTokenLoop();
-      x2Connector._stopRenewTokenLoop();
-
-      expect(x2Connector._tokenRenewTimeout).toBe(null);
-      expect(x2Connector._inactivityTimeout).toBe(null);
-      expect(x2Connector._inactivityCheckInterval).toBe(null);
     });
   });
 });
