@@ -14,7 +14,7 @@ describe('HTTP -> http', () => {
     expect(x2Connector.on).toBeTruthy();
   });
 
-  it('Initialize attributes', () => {
+  it('initialize attributes', () => {
     expect(x2Connector.token).toEqual(null);
     expect(x2Connector.tokenExpiriesAt).toBe(null);
     expect(x2Connector._tokenDuration).toBe(1000 * 60 * 20);
@@ -26,7 +26,7 @@ describe('HTTP -> http', () => {
   });
 
   describe('init()', () => {
-    it('Initialize default attributes', () => {
+    it('initialize default attributes', () => {
       const httpConfig = { baseUrl };
 
       return x2Connector
@@ -36,7 +36,7 @@ describe('HTTP -> http', () => {
         });
     });
 
-    it('Initialize attributes with config path', () => {
+    it('initialize attributes with config path', () => {
       const configPath = `${baseUrl}/config`;
 
       fetchMock.mock(configPath, {
@@ -174,6 +174,13 @@ describe('HTTP -> http', () => {
           expect(res.data._id).toBe(body._id);
           expect(res.data.account).toBe(body.account);
         });
+    });
+  });
+
+  describe('watchForInactivity()', () => {
+    it('set up event listeners to start watching user inactivity', () => {
+      x2Connector.watchForInactivity();
+      expect(x2Connector._watchForPageActivity).toBe(true);
     });
   });
 
