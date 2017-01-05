@@ -129,6 +129,17 @@ describe('HTTP -> http', () => {
     });
   });
 
+  describe('logout()', () => {
+    it('logout user and clear session data', () => (
+      x2Connector.logout()
+        .then(() => {
+          expect(x2Connector.isAuthenticated).toBe(false);
+          expect(x2Connector.token).toBe(undefined);
+          expect(x2Connector._storage.get('token')).toBe(null);
+        })
+    ));
+  });
+
   describe('getEnvironment()', () => {
     it('returns the current environment', () => {
       expect(x2Connector.getEnvironment()).toBe('DEV');
