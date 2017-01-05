@@ -1,6 +1,6 @@
 {
   "name": "@fintechdev/x2-connector",
-  "version": "0.3.11",
+  "version": "1.0.0",
   "description": "HTTP Connector to communicate with x2 services",
   "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
