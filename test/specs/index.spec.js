@@ -48,7 +48,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .get('/foo')
         .then((res) => {
-          expect(res).toEqual({ foo: 'bar' });
+          expect(res.data).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -67,7 +67,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .post('/foo')
         .then((res) => {
-          expect(res).toEqual({ foo: 'bar' });
+          expect(res.data).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -86,7 +86,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .put('/foo')
         .then((res) => {
-          expect(res).toEqual({ foo: 'bar' });
+          expect(res.data).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
@@ -105,7 +105,7 @@ describe('HTTP -> http', () => {
       return x2Connector
         .delete('/foo')
         .then((res) => {
-          expect(res).toEqual({ foo: 'bar' });
+          expect(res.data).toEqual({ foo: 'bar' });
           fetchMock.restore();
         });
     });
