@@ -195,4 +195,25 @@ describe('HTTP -> http', () => {
       expect(x2Connector.isProd()).toBe(false);
     });
   });
+
+  describe('_startRenewTokenLoop()', () => {
+    it('set up timeouts intervals for token renew', () => {
+      x2Connector._startRenewTokenLoop();
+      expect(typeof x2Connector._tokenRenewTimeout).toBe('object');
+      expect(x2Connector._inactivityTimeout).toBe(null);
+      expect(x2Connector._pageActivityDetected).toBe(false);
+      x2Connector._stopRenewTokenLoop();
+    });
+  });
+
+  describe('_stopRenewTokenLoop()', () => {
+    it('stop timeouts intervals for token renew', () => {
+      x2Connector._startRenewTokenLoop();
+      x2Connector._stopRenewTokenLoop();
+
+      expect(x2Connector._tokenRenewTimeout).toBe(null);
+      expect(x2Connector._inactivityTimeout).toBe(null);
+      expect(x2Connector._inactivityCheckInterval).toBe(null);
+    });
+  });
 });
