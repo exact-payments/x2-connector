@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "unused-ignores": [
-      "figlet"
+      "figlet",
+      "trae",
+      "fetch-mock",
     ]
   }
 }
