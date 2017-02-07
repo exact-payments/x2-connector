@@ -14,6 +14,6 @@ test:
   override:
     - npm test
     - COVERALLS_SERVICE_NAME="circleci" COVERALLS_SERVICE_JOB_ID="$CIRCLE_BUILD_NUM" ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info
-    - ./node_modules/.bin/bithound check BITHOUND_TOKEN
+    - ./node_modules/.bin/bithound check git@github.com:fintechdev/x2-connector.git
   post:
     - cp -R ./test/unit/coverage/* $CIRCLE_ARTIFACTS/
