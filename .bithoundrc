@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "unused-ignores": [
+    "mute": [
       "figlet",
       "trae",
       "fetch-mock",
