@@ -3,7 +3,7 @@
     "mute": [
       "figlet",
       "trae",
-      "fetch-mock",
+      "fetch-mock"
     ]
   }
 }
