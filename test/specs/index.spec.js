@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
 /* global describe it expect */
 
-import fetchMock   from 'fetch-mock';
-import trae        from 'trae';
-import x2Connector from '../../src';
+const trae        = require('trae');
+const fetchMock   = require('fetch-mock');
+const x2Connector = require('../../src');
 
 describe('HTTP -> http', () => {
 
