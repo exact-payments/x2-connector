@@ -130,7 +130,7 @@ class HTTP extends EventEmitter {
   _startRenewTokenLoop() {
     const startTokenRenewTimeout = () => {
       if (this._tokenRenewTimeout) {
-        this._tokenRenewTimeout.clear();
+        this._tokenRenewTimeout.clear && this._tokenRenewTimeout.clear();
         this._tokenRenewTimeout = null;
       }
 
@@ -146,7 +146,7 @@ class HTTP extends EventEmitter {
 
     const startInactivityTimeout = () => {
       if (this._inactivityTimeout) {
-        this._inactivityTimeout.clear();
+        this._inactivityTimeout.clear && this._inactivityTimeout.clear();
         this._inactivityTimeout = null;
       }
 
@@ -171,15 +171,15 @@ class HTTP extends EventEmitter {
 
   _stopRenewTokenLoop() {
     if (this._tokenRenewTimeout) {
-      this._tokenRenewTimeout.clear();
+      this._tokenRenewTimeout.clear && this._tokenRenewTimeout.clear();
       this._tokenRenewTimeout = null;
     }
     if (this._inactivityTimeout) {
-      this._inactivityTimeout.clear();
+      this._inactivityTimeout.clear && this._inactivityTimeout.clear();
       this._inactivityTimeout = null;
     }
     if (this._inactivityCheckInterval) {
-      this._inactivityCheckInterval.clear();
+      this._inactivityCheckInterval.clear && this._inactivityCheckInterval.clear();
       this._inactivityCheckInterval = null;
     }
   }
