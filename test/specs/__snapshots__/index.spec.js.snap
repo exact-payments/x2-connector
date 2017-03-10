@@ -1,0 +1,99 @@
+exports[`HTTP -> http delete() makes a DELETE request to baseURL + path 1`] = `
+Object {
+  "data": Object {
+    "foo": "bar",
+  },
+  "headers": Headers {
+    "_headers": Object {
+      "content-type": Array [
+        "application/json",
+      ],
+    },
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;
+
+exports[`HTTP -> http get() makes a GET request to baseURL + path and responds 200 status code 1`] = `
+Object {
+  "data": Object {
+    "foo": "bar",
+  },
+  "headers": Headers {
+    "_headers": Object {
+      "content-type": Array [
+        "application/json",
+      ],
+    },
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;
+
+exports[`HTTP -> http getSession() makes a get to /user/current through X2 API and get session data 1`] = `
+Object {
+  "data": Object {
+    "_id": 1234,
+    "account": 1234,
+  },
+  "headers": Headers {
+    "_headers": Object {
+      "content-type": Array [
+        "application/json",
+      ],
+    },
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;
+
+exports[`HTTP -> http init() initialize attributes with config path 1`] = `undefined`;
+
+exports[`HTTP -> http init() initialize default attributes 1`] = `undefined`;
+
+exports[`HTTP -> http login() makes a post to /token through X2 API to login 1`] = `undefined`;
+
+exports[`HTTP -> http logout() logout user and clear session data 1`] = `undefined`;
+
+exports[`HTTP -> http post() makes a POST request to baseURL + path 1`] = `
+Object {
+  "data": Object {
+    "foo": "bar",
+  },
+  "headers": Headers {
+    "_headers": Object {
+      "content-type": Array [
+        "application/json",
+      ],
+    },
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;
+
+exports[`HTTP -> http put() makes a PUT request to baseURL + path 1`] = `
+Object {
+  "data": Object {
+    "foo": "bar",
+  },
+  "headers": Headers {
+    "_headers": Object {
+      "content-type": Array [
+        "application/json",
+      ],
+    },
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;
+
+exports[`HTTP -> http resetPassword() makes a post to /user/reset-password/:passwordResetToken through X2 API 1`] = `Object {}`;
+
+exports[`HTTP -> http sendPasswordReset() makes a post to /user/send-password-reset/:email through X2 API 1`] = `Object {}`;
+
+exports[`HTTP -> http updatePassword() makes a post to /user/update-password/:email through X2 API 1`] = `Object {}`;

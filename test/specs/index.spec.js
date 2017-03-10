@@ -1,11 +1,13 @@
 /* eslint-disable max-len */
-/* global describe it expect */
+/* global describe it expect afterEach */
 
 const trae        = require('trae');
 const fetchMock   = require('fetch-mock');
 const x2Connector = require('../../src');
 
 describe('HTTP -> http', () => {
+
+  afterEach(() => { fetchMock.restore(); });
 
   const baseUrl = 'http://localhost:8080';
 
@@ -31,8 +33,9 @@ describe('HTTP -> http', () => {
 
       return x2Connector
         .init({ httpConfig })
-        .then(() => {
+        .then((res) => {
           expect(trae.baseUrl()).toBe(baseUrl);
+          expect(res).toMatchSnapshot();
         });
     });
 
@@ -47,8 +50,9 @@ describe('HTTP -> http', () => {
 
       return x2Connector
         .init({ configPath })
-        .then(() => {
+        .then((res) => {
           expect(trae.baseUrl()).toBe(baseUrl);
+          expect(res).toMatchSnapshot();
         });
     });
   });
@@ -65,7 +69,7 @@ describe('HTTP -> http', () => {
         .get('/foo')
         .then((res) => {
           expect(res.data).toEqual({ foo: 'bar' });
-          fetchMock.restore();
+          expect(res).toMatchSnapshot();
         });
     });
   });
@@ -84,7 +88,7 @@ describe('HTTP -> http', () => {
         .post('/foo')
         .then((res) => {
           expect(res.data).toEqual({ foo: 'bar' });
-          fetchMock.restore();
+          expect(res).toMatchSnapshot();
         });
     });
   });
@@ -103,13 +107,13 @@ describe('HTTP -> http', () => {
         .put('/foo')
         .then((res) => {
           expect(res.data).toEqual({ foo: 'bar' });
-          fetchMock.restore();
+          expect(res).toMatchSnapshot();
         });
     });
   });
 
   describe('delete()', () => {
-    it('makes a DEL request to baseURL + path', () => {
+    it('makes a DELETE request to baseURL + path', () => {
       fetchMock.mock(`${baseUrl}/foo`, {
         status : 200,
         body   : { foo: 'bar' },
@@ -122,7 +126,7 @@ describe('HTTP -> http', () => {
         .delete('/foo')
         .then((res) => {
           expect(res.data).toEqual({ foo: 'bar' });
-          fetchMock.restore();
+          expect(res).toMatchSnapshot();
         });
     });
   });
@@ -139,19 +143,22 @@ describe('HTTP -> http', () => {
 
       return x2Connector
         .login('user', 'password')
-        .then(() => {
+        .then((res) => {
           expect(x2Connector.token).toBe('1234');
+          expect(res).toMatchSnapshot();
         });
     });
   });
 
   describe('logout()', () => {
     it('logout user and clear session data', () => (
-      x2Connector.logout()
-        .then(() => {
+      x2Connector
+        .logout()
+        .then((res) => {
           expect(x2Connector.isAuthenticated).toBe(false);
           expect(x2Connector.token).toBe(undefined);
           expect(x2Connector._storage.get('token')).toBe(null);
+          expect(res).toMatchSnapshot();
         })
     ));
   });
@@ -173,6 +180,69 @@ describe('HTTP -> http', () => {
         .then((res) => {
           expect(res.data._id).toBe(body._id);
           expect(res.data.account).toBe(body.account);
+          expect(res).toMatchSnapshot();
+        });
+    });
+  });
+
+  describe('sendPasswordReset()', () => {
+    it('makes a post to /user/send-password-reset/:email through X2 API', () => {
+      const email = 'foo@baz';
+
+      fetchMock.mock(`${baseUrl}/user/send-password-reset/${email}`, {
+        status : 204,
+        headers: { 'Content-Type': 'application/json' },
+      }, {
+        method: 'POST',
+      });
+
+      return x2Connector
+        .sendPasswordReset(email)
+        .then((res) => {
+          expect(res).toMatchSnapshot();
+        });
+    });
+  });
+
+  describe('resetPassword()', () => {
+    it('makes a post to /user/reset-password/:passwordResetToken through X2 API', () => {
+      const passwordResetToken = 'footoken123';
+      const newPassword        = 'newPassword';
+
+      fetchMock.mock(`${baseUrl}/user/reset-password/${passwordResetToken}`, {
+        status : 204,
+        headers: { 'Content-Type': 'application/json' },
+        body   : { newPassword },
+      }, {
+        method: 'POST',
+      });
+
+      return x2Connector
+        .resetPassword(newPassword, passwordResetToken)
+        .then((res) => {
+          expect(res).toMatchSnapshot();
+        });
+    });
+  });
+
+  describe('updatePassword()', () => {
+    it('makes a post to /user/update-password/:email through X2 API', () => {
+      const email           = 'foo@baz';
+      const currentPassword = 'currentPassword123';
+      const newPassword     = 'newPassword123';
+
+      fetchMock.mock(`${baseUrl}/user/update-password/${email}`, {
+        status : 204,
+        headers: { 'Content-Type': 'application/json' },
+        body   : { currentPassword, newPassword },
+      }, {
+        method: 'POST',
+      });
+
+      return x2Connector
+        .updatePassword(email, currentPassword, newPassword)
+        .then((res) => {
+          expect(res).toMatchSnapshot();
         });
     });
   });
