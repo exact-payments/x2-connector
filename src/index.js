@@ -104,7 +104,7 @@ class HTTP extends EventEmitter {
     return Promise.resolve();
   }
 
-  resetPasswordRequest(email) {
+  sendPasswordReset(email) {
     return trae
       .post(`/user/send-password-reset/${email}`)
       .then(res => res.data);
@@ -113,6 +113,12 @@ class HTTP extends EventEmitter {
   resetPassword(newPassword, passwordResetToken) {
     return trae
       .post(`/user/reset-password/${passwordResetToken}`, { newPassword })
+      .then(res => res.data);
+  }
+
+  updatePassword(email, currentPassword, newPassword) {
+    return trae
+      .post(`/user/update-password/${email}`, { currentPassword, newPassword })
       .then(res => res.data);
   }
 
