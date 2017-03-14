@@ -66,9 +66,9 @@ class HTTP extends EventEmitter {
     return this._env === 'PROD';
   }
 
-  login(email, password) {
+  login(params) {
     return trae
-      .post('/token', { email, password })
+      .post('/token', params)
       .then((res) => {
         this.isAuthenticated = true;
         this.token           = res.data.token;
