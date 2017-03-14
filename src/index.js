@@ -22,6 +22,7 @@ class HTTP extends EventEmitter {
     this._pageActivityDetected    = false;
     this._watchForPageActivity    = false;
 
+    this.config  = {};
     this.session = {};
 
     this._restoreExistingSession();
@@ -43,6 +44,8 @@ class HTTP extends EventEmitter {
     return trae
       .get(opts.configPath, { bodyType: 'json' })
       .then((res) => {
+        this.config = res;
+
         res.data.env           && (this._env = res.data.env);
         res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
 
@@ -66,9 +69,9 @@ class HTTP extends EventEmitter {
     return this._env === 'PROD';
   }
 
-  login(email, password) {
+  login(params) {
     return trae
-      .post('/token', { email, password })
+      .post('/token', params)
       .then((res) => {
         this.isAuthenticated = true;
         this.token           = res.data.token;
