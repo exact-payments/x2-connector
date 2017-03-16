@@ -44,7 +44,7 @@ class HTTP extends EventEmitter {
     return trae
       .get(opts.configPath, { bodyType: 'json' })
       .then((res) => {
-        this.config = res;
+        this.config = res.data;
 
         res.data.env           && (this._env = res.data.env);
         res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
@@ -109,7 +109,7 @@ class HTTP extends EventEmitter {
 
   sendPasswordReset(email) {
     return trae
-      .post(`/user/send-password-reset/${email}`)
+      .post(`/user/send-password-reset/${email}`, { application: this.config.application })
       .then(res => res.data);
   }
 
