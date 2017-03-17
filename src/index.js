@@ -35,9 +35,7 @@ class HTTP extends EventEmitter {
 
   init(opts = {}) {
     if (!opts.configPath) {
-      opts.httpConfig         || (opts.httpConfig = {});
-      opts.httpConfig.baseUrl || (opts.httpConfig.baseUrl = 'http://localhost:8080');
-      trae.defaults(opts.httpConfig);
+      trae.defaults({ baseUrl: 'http://localhost:8080' });
       return Promise.resolve();
     }
 
@@ -49,15 +47,9 @@ class HTTP extends EventEmitter {
         res.data.env           && (this._env = res.data.env);
         res.data.tokenDuration && (this._tokenDuration = res.data.tokenDuration);
 
-        const getBaseUrl = () => {
-          const apiUrl = res.data.api && res.data.api.url;
-          return apiUrl || 'http://localhost:8080';
-        };
-
-        res.data.httpConfig         || (res.data.httpConfig = {});
-        res.data.httpConfig.baseUrl || (res.data.httpConfig.baseUrl = getBaseUrl());
-
-        trae.defaults(res.data.httpConfig);
+        trae.defaults({
+          baseUrl: res.data.api && res.data.api.url ? res.data.api.url : 'http://localhost:8080',
+        });
       });
   }
 
@@ -107,9 +99,9 @@ class HTTP extends EventEmitter {
     return Promise.resolve();
   }
 
-  sendPasswordReset(email) {
+  sendPasswordReset(email, application) {
     return trae
-      .post(`/user/send-password-reset/${email}`, { application: this.config.application })
+      .post(`/user/send-password-reset/${email}`, { application })
       .then(res => res.data);
   }
 
@@ -195,8 +187,7 @@ class HTTP extends EventEmitter {
 
   _initMethods() {
     ['get', 'post', 'put', 'delete'].forEach((method) => {
-      this[method] = (...args) => trae[method](...args)
-      .then(res => res);
+      this[method] = (...args) => trae[method](...args);
     });
   }
 
