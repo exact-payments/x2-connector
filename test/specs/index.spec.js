@@ -187,17 +187,19 @@ describe('HTTP -> http', () => {
 
   describe('sendPasswordReset()', () => {
     it('makes a post to /user/send-password-reset/:email through X2 API', () => {
-      const email = 'foo@baz';
+      const email       = 'foo@baz';
+      const application = 'foo-app';
 
       fetchMock.mock(`${baseUrl}/user/send-password-reset/${email}`, {
         status : 204,
         headers: { 'Content-Type': 'application/json' },
       }, {
         method: 'POST',
+        body  : { application },
       });
 
       return x2Connector
-        .sendPasswordReset(email)
+        .sendPasswordReset(email, application)
         .then((res) => {
           expect(res).toMatchSnapshot();
         });
