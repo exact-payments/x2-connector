@@ -1,5 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
 exports[`HTTP -> http delete() makes a DELETE request to baseURL + path 1`] = `
 Object {
+  "config": Object {
+    "headers": Object {},
+    "method": "delete",
+    "url": "http://localhost:8080/foo",
+  },
   "data": Object {
     "foo": "bar",
   },
@@ -17,6 +24,11 @@ Object {
 
 exports[`HTTP -> http get() makes a GET request to baseURL + path and responds 200 status code 1`] = `
 Object {
+  "config": Object {
+    "headers": Object {},
+    "method": "get",
+    "url": "http://localhost:8080/foo",
+  },
   "data": Object {
     "foo": "bar",
   },
@@ -34,6 +46,11 @@ Object {
 
 exports[`HTTP -> http getSession() makes a get to /user/current through X2 API and get session data 1`] = `
 Object {
+  "config": Object {
+    "headers": Object {},
+    "method": "get",
+    "url": "http://localhost:8080/user/current",
+  },
   "data": Object {
     "_id": 1234,
     "account": 1234,
@@ -60,6 +77,19 @@ exports[`HTTP -> http logout() logout user and clear session data 1`] = `undefin
 
 exports[`HTTP -> http post() makes a POST request to baseURL + path 1`] = `
 Object {
+  "config": Object {
+    "body": "{}",
+    "headers": Object {
+      "Content-Type": "application/json",
+    },
+    "method": "post",
+    "post": Object {
+      "headers": Object {
+        "Content-Type": "application/json",
+      },
+    },
+    "url": "http://localhost:8080/foo",
+  },
   "data": Object {
     "foo": "bar",
   },
@@ -77,6 +107,19 @@ Object {
 
 exports[`HTTP -> http put() makes a PUT request to baseURL + path 1`] = `
 Object {
+  "config": Object {
+    "body": "{}",
+    "headers": Object {
+      "Content-Type": "application/json",
+    },
+    "method": "put",
+    "put": Object {
+      "headers": Object {
+        "Content-Type": "application/json",
+      },
+    },
+    "url": "http://localhost:8080/foo",
+  },
   "data": Object {
     "foo": "bar",
   },
