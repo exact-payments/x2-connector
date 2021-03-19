@@ -2,7 +2,7 @@ const EventEmitter = require('events').EventEmitter;
 const trae         = require('trae');
 const setTimeout   = require('relign/set-timeout');
 const setInterval  = require('relign/set-interval');
-const Storage      = require('@fintechdev/x2-service-storage');
+const Storage      = require('@exactpayments/x2-service-storage');
 
 
 class HTTP extends EventEmitter {

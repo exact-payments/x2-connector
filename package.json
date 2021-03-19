@@ -1,6 +1,6 @@
 {
-  "name": "@fintechdev/x2-connector",
-  "version": "2.1.3",
+  "name": "@exactpayments/x2-connector",
+  "version": "2.1.4",
   "description": "HTTP Connector to communicate with x2 services",
   "main": "src/index.js",
   "author": "Nicolas Del Valle <nicolas@fintechdev.net>",
@@ -14,7 +14,7 @@
     "eslint": "eslint . --ext .js"
   },
   "dependencies": {
-    "@fintechdev/x2-service-storage": "0.0.2",
+    "@exactpayments/x2-service-storage": "^0.0.2",
     "relign": "^0.7.1",
     "trae": "^1.4.0"
   },
